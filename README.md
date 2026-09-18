@@ -56,6 +56,8 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
   deutsche spaCy-Modell bewusst auslässt.
 - MCP-Server: Werkzeuge werden über die echte MCP-Schnittstelle aufgerufen, ein
   fehlendes Dokument kommt als Fehlerergebnis zurück statt als Absturz.
+- Web-Demo mit vier Schritten. Jeder Schritt stellt die deutsche Behandlung einer
+  naiven gegenüber, damit der Unterschied sichtbar wird statt behauptet.
 
 Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
 dem Hashing-Modell: Recall@1 0,83, Recall@5 1,00, MRR 0,90, nDCG@5 0,93.
@@ -85,6 +87,16 @@ aber rund vierhundertmal so lange je Frage. Für zwölf Fragen ist das
 nebensächlich, bei Tausenden Anfragen ist es eine Entscheidung. Genau deshalb
 wird gemessen und nicht behauptet.
 
+Dasselbe gilt für die deutsche Behandlung selbst. Über dieselben zwölf Fragen
+erreicht die deutsche Suche 10 von 12, eine sorgfältig gebaute naive Suche mit
+Satzzeichenbereinigung und Stoppwortliste ebenfalls 10 von 12. Erst die
+nachlässige Variante — an Leerzeichen trennen, Satzzeichen kleben lassen —
+fällt auf 8 von 12 zurück. Der Vorsprung zeigt sich also nicht überall, sondern
+genau dort, wo Deutsch schwer ist: „Ersatzteilen“ findet den Abschnitt
+„Ersatzteile“, und das gelingt keiner der naiven Varianten. Einzelne Fälle
+verliert die deutsche Suche auch, etwa bei „Wartung“ gegen
+„Wartungsintervalle“. Wer etwas anderes behauptet, hat nicht nachgemessen.
+
 **Vorhanden, aber noch nicht gegen echte Systeme geprüft**
 
 Zurzeit ist hier nichts offen. Alle optionalen Bausteine sind mindestens einmal
@@ -111,7 +123,8 @@ belastbar.
 - Bewertung der Antwortqualität über ein Sprachmodell (Treue, Relevanz) –
   die deterministischen Näherungen gibt es, das Urteil durch ein Modell nicht
 - Enterprise-Datenbankanbindung (Fragen in SQL übersetzen)
-- Web-Demo und Benchmark-Website
+- Benchmark-Website: Die Web-Demo gibt es, eine öffentliche Seite mit den
+  Messwerten aus mehreren Läufen noch nicht
 - Feintuning
 
 ---
