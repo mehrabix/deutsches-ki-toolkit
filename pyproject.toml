@@ -77,6 +77,7 @@ dev = [
 
 [project.scripts]
 deutsches-ki = "deutsches_ki.cli.main:app"
+deutsches-ki-mcp = "deutsches_ki.mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/mehrabix/deutsches-ki-toolkit"
