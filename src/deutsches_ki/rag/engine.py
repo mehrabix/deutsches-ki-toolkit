@@ -102,5 +102,5 @@ class DeutschRAG:
             citations=citations,
             retrieved_chunks=chunks,
             confidence=_confidence(results),
-            metadata={"mode": "llm", "citations": report.model_dump(mode="json")},
+            metadata={"mode": "llm", "citations": report.as_metadata()},
         )

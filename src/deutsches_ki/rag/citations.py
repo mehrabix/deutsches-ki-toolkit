@@ -35,6 +35,18 @@ class CitationReport(BaseModel):
         """Wurden nur Quellen genannt, die es auch gibt?"""
         return bool(self.cited) and not self.unknown
 
+    def as_metadata(self) -> dict[str, object]:
+        """Der Bericht als Wörterbuch, mit den abgeleiteten Angaben.
+
+        ``model_dump`` lässt die beiden Eigenschaften weg, weil sie berechnet
+        werden. Wer die Antwort weiterreicht, will sie aber gerade sehen.
+        """
+        return {
+            **self.model_dump(mode="json"),
+            "has_citations": self.has_citations,
+            "all_valid": self.all_valid,
+        }
+
 
 def extract_markers(answer: str) -> list[int]:
     """Alle Nummern in eckigen Klammern, in Reihenfolge des Auftretens."""
