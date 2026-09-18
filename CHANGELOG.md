@@ -4,7 +4,10 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
-## [Unreleased]
+## [0.5.1]
+
+Behebt die Satzsegmentierung. Die Prüfung gegen eine breitere Sammlung
+deutscher Fälle ergab zwölf Fehler bei dreißig Fällen.
 
 ### Behoben
 
