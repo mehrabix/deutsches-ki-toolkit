@@ -201,10 +201,10 @@ Deutsche Texte bringen weitere Eigenheiten mit, die hier aufgeräumt werden:
 
 ```python
 from deutsches_ki.text import (
-    normalize_unicode,       # ─ vs. –, „ vs. ", nicht umbrechende Leerzeichen
-    normalize_quotes,        # „richtig“ und »so«
-    normalize_dashes,        # Gedankenstrich, Bis-Strich, Bindestrich
-    normalize_ergaenzung,    # "Haupt- und Nebensatz" → "Hauptsatz und Nebensatz"
+    normalize_unicode,  # ─ vs. –, „ vs. ", nicht umbrechende Leerzeichen
+    normalize_quotes,  # „richtig“ und »so«
+    normalize_dashes,  # Gedankenstrich, Bis-Strich, Bindestrich
+    normalize_ergaenzung,  # "Haupt- und Nebensatz" → "Hauptsatz und Nebensatz"
     normalize_whitespace,
     normalize_for_search,
 )
@@ -246,8 +246,7 @@ Aufzählungen wie „1.“ oder „a)“ bleiben zusammen.
 from deutsches_ki.pii import detect
 
 treffer = detect(
-    "Überweisung an Max Mustermann, IBAN DE89 3704 0044 0532 0130 00, "
-    "USt-IdNr. DE123456789."
+    "Überweisung an Max Mustermann, IBAN DE89 3704 0044 0532 0130 00, USt-IdNr. DE123456789."
 )
 ```
 
@@ -473,8 +472,7 @@ expand_query("Urlaubsantrag genehmigen")
 ```
 
 ```python
-["Urlaubsantrag", "Urlaubsfreigabe", "Urlaubsgenehmigung",
- "Abwesenheitsantrag", "Urlaubstage"]
+["Urlaubsantrag", "Urlaubsfreigabe", "Urlaubsgenehmigung", "Abwesenheitsantrag", "Urlaubstage"]
 ```
 
 Erweiterung entsteht aus mehreren Quellen und nicht aus einem Sprachmodell allein:
@@ -640,12 +638,10 @@ antwort = rag.ask("Welche Zahlungsfrist gilt laut Vertrag?")
 ```python
 RAGAnswer(
     answer="Die Zahlungsfrist beträgt 30 Tage.",
-    citations=[
-        Citation(document="Vertrag.pdf", page=12, section="§ 4 Zahlungsbedingungen")
-    ],
+    citations=[Citation(document="Vertrag.pdf", page=12, section="§ 4 Zahlungsbedingungen")],
     retrieved_chunks=[...],
     confidence=0.87,
-    metadata={...}
+    metadata={...},
 )
 ```
 

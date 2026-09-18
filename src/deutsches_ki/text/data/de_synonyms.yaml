@@ -1,0 +1,34 @@
+# Deutsche Synonyme für die Erweiterung von Suchanfragen.
+# Schlüssel: Wort in Kleinschreibung. Werte: alternative Schreibweisen.
+urlaub:
+  - Erholungsurlaub
+  - Urlaubstage
+urlaubsantrag:
+  - Urlaubsfreigabe
+  - Urlaubsgenehmigung
+  - Abwesenheitsantrag
+  - Urlaubstage
+kündigung:
+  - Kündigungsschreiben
+  - Aufhebungsvertrag
+kündigungsfrist:
+  - Kündigungszeitraum
+  - Kündigungstermin
+zahlung:
+  - Zahlungseingang
+  - Begleichung
+zahlungsfrist:
+  - Zahlungsziel
+  - Zahlungsbedingung
+rechnung:
+  - Rechnungsstellung
+  - Rechnungsbetrag
+auftrag:
+  - Arbeitsauftrag
+  - Bestellung
+mitarbeiter:
+  - Beschäftigte
+  - Arbeitnehmer
+vertrag:
+  - Vertragswerk
+  - Vereinbarung
