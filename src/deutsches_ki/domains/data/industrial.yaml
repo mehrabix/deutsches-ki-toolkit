@@ -1,0 +1,19 @@
+name: industrial
+title: Industrie
+description: Begriffe aus Fertigung und Instandhaltung.
+document_types: [technical_document, order, report]
+terminology:
+  - preferred: Arbeitsauftrag
+    aliases: [Auftrag, Work Order, Fertigungsauftrag]
+  - preferred: Instandhaltung
+    aliases: [Maintenance, Wartung]
+  - preferred: Fertigung
+    aliases: [Produktion, Herstellung]
+  - preferred: Schicht
+    aliases: [Arbeitsschicht, Schichtbetrieb]
+  - preferred: Störung
+    aliases: [Fehler, Ausfall, Störfall]
+  - preferred: Anlage
+    aliases: [Maschine, Equipment, Betriebsmittel]
+  - preferred: Rüstzeit
+    aliases: [Umrüstzeit, Rüstaufwand]

@@ -1,0 +1,19 @@
+name: legal
+title: Recht
+description: Begriffe für Verträge und Rechtstexte.
+document_types: [contract, legal_document]
+terminology:
+  - preferred: Auftraggeber
+    aliases: [Auftraggeberin, Besteller, Mandant]
+  - preferred: Auftragnehmer
+    aliases: [Auftragnehmerin, Dienstleister, Beauftragter]
+  - preferred: Kündigungsfrist
+    aliases: [Kündigungszeitraum, Kündigungstermin, Kündigungsfristigkeit]
+  - preferred: Vertragsgegenstand
+    aliases: [Vertragsinhalt, Leistungsgegenstand]
+  - preferred: Schriftform
+    aliases: [schriftliche Form, Textform]
+  - preferred: Verzugszinsen
+    aliases: [Verzugszins, Säumniszinsen, Mahnzinsen]
+  - preferred: Haftungsausschluss
+    aliases: [Haftungsbeschränkung, Freizeichnung]

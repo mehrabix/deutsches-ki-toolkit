@@ -1,0 +1,19 @@
+name: hr
+title: Personal
+description: Begriffe rund um Beschäftigung, Urlaub und Abwesenheit.
+document_types: [hr_document]
+terminology:
+  - preferred: Beschäftigte
+    aliases: [Mitarbeiter, Arbeitnehmer, Angestellte, Mitarbeiterin]
+  - preferred: Erholungsurlaub
+    aliases: [Urlaub, Urlaubstage]
+  - preferred: Arbeitsunfähigkeitsbescheinigung
+    aliases: [AU, Krankmeldung, Attest, Arbeitsunfähigkeitszeugnis]
+  - preferred: Personalnummer
+    aliases: [Pers-Nr, Mitarbeiternummer, Personal-Nr]
+  - preferred: Elternzeit
+    aliases: [Erziehungsurlaub]
+  - preferred: Teilzeit
+    aliases: [Teilzeitbeschäftigung, Teilzeitkraft]
+  - preferred: Abwesenheitsantrag
+    aliases: [Urlaubsantrag, Freistellungsantrag]

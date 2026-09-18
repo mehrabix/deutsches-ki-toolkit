@@ -1,0 +1,19 @@
+name: finance
+title: Finanzen
+description: Begriffe für Rechnungen, Angebote und Bestellungen.
+document_types: [invoice, offer, order]
+terminology:
+  - preferred: Rechnungsnummer
+    aliases: [Rechnungs-Nr, RG-Nr, Rechnungsnr, Belegnummer]
+  - preferred: Zahlungsfrist
+    aliases: [Zahlungsziel, Zahlungstermin, Fälligkeit]
+  - preferred: Umsatzsteuer
+    aliases: [USt, MwSt, Mehrwertsteuer, Umsatzsteuerbetrag]
+  - preferred: Nettobetrag
+    aliases: [Netto, Nettosumme]
+  - preferred: Bruttobetrag
+    aliases: [Brutto, Bruttosumme, Gesamtbetrag]
+  - preferred: Kundennummer
+    aliases: [Kd-Nr, Kundennr, Debitorennummer]
+  - preferred: Liefertermin
+    aliases: [Lieferdatum, Zustelltermin]

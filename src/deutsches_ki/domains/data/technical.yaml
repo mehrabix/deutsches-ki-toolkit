@@ -1,0 +1,19 @@
+name: technical
+title: Technik
+description: Begriffe für technische Dokumentation, Handbücher und Spezifikationen.
+document_types: [technical_document, manual, specification]
+terminology:
+  - preferred: Instandhaltung
+    aliases: [Wartung, Pflege]
+  - preferred: Wartungsintervall
+    aliases: [Wartungszyklus, Serviceintervall, Wartungsabstand]
+  - preferred: Baugruppe
+    aliases: [Modul, Bauteilgruppe]
+  - preferred: Betriebsanleitung
+    aliases: [Bedienungsanleitung, Handbuch, Benutzerhandbuch]
+  - preferred: Ersatzteil
+    aliases: [Ersatz, Austauschteil]
+  - preferred: Schnittstelle
+    aliases: [Interface, Anschlussstelle]
+  - preferred: Anlage
+    aliases: [Maschine, Gerät, System]
