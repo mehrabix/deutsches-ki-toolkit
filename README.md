@@ -41,6 +41,10 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
 - Kommandozeile, MCP-Werkzeuge, Docker-Image
 - Embeddings über BGE-M3 und Cross-Encoder-Reranking, gegen echte Modelle
   geprüft
+- PDF über Docling, mit erhaltener Paragraphengliederung: `§ 4
+  Zahlungsbedingungen` bleibt ein eigener Abschnitt statt einer langen Zeichenkette
+- Einlesen erkennt die Sprache (deutsch, englisch, gemischt) und zieht deutsche
+  Geschäftsangaben wie Rechnungs- und Kundennummer in die Metadaten
 - spaCy- und Presidio-Detektoren gegen ein echtes deutsches Modell geprüft,
   samt CI-Lauf. Dabei bestätigt sich der Ausgangspunkt des Projekts: Presidio
   findet eine deutsche Steuernummer und eine Handelsregisternummer nicht, die
@@ -80,7 +84,6 @@ Die folgenden Bausteine sind geschrieben und lassen sich einschalten, wurden
 aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
 
 - GLiNER-Detektor (`gliner`)
-- Docling für PDF und DOCX (`docling`)
 - Ollama- und vLLM-Anbindung, bisher nur gegen Attrappen getestet
 - MCP-Server selbst (die Werkzeuge dahinter sind getestet)
 
@@ -629,20 +632,25 @@ zusätzlicher Suchdienst, keine zweite Datenhaltung, keine Synchronisierung.
 ## Deutsche Volltextsuche in PostgreSQL
 
 Hier lauert eine Falle. Standardmäßig findet PostgreSQL „Schnösel“ und „Schnoesel“ nicht
-gegenseitig – auch nicht mit `default_text_search_config = 'german'`. Das Toolkit legt
-deshalb eine passende Textsuchkonfiguration und eigene `unaccent`-Regeln an:
+gegenseitig – auch nicht mit `default_text_search_config = 'german'`. Der übliche Rat ist,
+die `unaccent`-Regeln des Servers zu ändern, damit `ä` zu `ae` wird statt zu `a`. Das
+verlangt Schreibrechte im Serververzeichnis und ist beim nächsten Update wieder weg.
+
+Das Toolkit geht einen anderen Weg: Neben dem Originaltext steht eine Suchspalte, die
+bereits in Python gefaltet und um Komposita-Bestandteile und Wortstämme ergänzt wurde.
 
 ```sql
-CREATE TEXT SEARCH CONFIGURATION deutsche_ki (COPY = german);
-ALTER TEXT SEARCH CONFIGURATION deutsche_ki
-    ALTER MAPPING FOR hword, hword_part, word
-    WITH unaccent, german_stem, german_compound;
-
--- unaccent-Regeln:  ä → ae, ö → oe, ü → ue
+content_search  TEXT NOT NULL,
+search_vector   TSVECTOR GENERATED ALWAYS AS (
+                    to_tsvector('simple'::regconfig, content_search)
+                ) STORED
 ```
 
-Danach findet eine Suche nach „Schnösel“ beide Schreibweisen, und die Komposita-Zerlegung
-greift zusätzlich. Das ist die unspektakulärste, aber wirksamste Verbesserung für deutsche
+Damit ist die Volltextsuche in der Datenbank exakt dieselbe wie die lexikalische Suche im
+Arbeitsspeicher: gleiche Faltung, gleiche Zerlegung, kein Sonderfall. Der Originaltext
+bleibt unangetastet in `content` stehen, und es braucht keine Sonderrechte am Server.
+
+Das ist die unspektakulärste, aber wirksamste Verbesserung für deutsche
 Unternehmenssuche.
 
 ---

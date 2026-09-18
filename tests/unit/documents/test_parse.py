@@ -43,7 +43,9 @@ def test_parse_plaintext_sections(tmp_path: Path) -> None:
     assert document.source == str(file)
     assert document.title == "vertrag"
     assert len(document.sections) == 1
-    assert document.sections[0].metadata["paragraphs"] == 3
+    content = document.sections[0].content
+    assert "Zahlungsfrist" in content
+    assert "Kündigungsfrist" in content
 
 
 def test_parse_markdown_builds_tree(tmp_path: Path) -> None:

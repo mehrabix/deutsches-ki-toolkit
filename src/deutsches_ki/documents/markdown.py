@@ -1,15 +1,52 @@
-"""Zerlegen von Markdown in eine Abschnittsstruktur."""
+"""Zerlegen von Markdown und Klartext in eine Abschnittsstruktur."""
 
 from __future__ import annotations
 
-import re
-
 from deutsches_ki.core.enums import Language
 from deutsches_ki.core.models import Document, Section
+from deutsches_ki.documents.headings import build_sections
 
-__all__ = ["parse_markdown"]
+__all__ = ["first_title", "parse_markdown", "parse_plaintext", "split_paragraphs"]
 
-_HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
+
+def split_paragraphs(text: str) -> list[str]:
+    """Trennt Text an Leerzeilen in Absätze."""
+    blocks: list[str] = []
+    current: list[str] = []
+    for line in text.splitlines():
+        if line.strip():
+            current.append(line.rstrip())
+        elif current:
+            blocks.append("\n".join(current).strip())
+            current = []
+    if current:
+        blocks.append("\n".join(current).strip())
+    return blocks
+
+
+def first_title(sections: list[Section]) -> str | None:
+    """Der Titel des ersten Abschnitts der obersten Ebene."""
+    for section in sections:
+        if section.title:
+            return section.title
+    return None
+
+
+def _document(
+    text: str,
+    *,
+    source: str,
+    title: str | None,
+    language: Language,
+) -> Document:
+    sections = build_sections(text)
+    return Document(
+        source=source,
+        title=title or first_title(sections),
+        language=language,
+        content=text,
+        sections=sections,
+    )
 
 
 def parse_markdown(
@@ -19,47 +56,20 @@ def parse_markdown(
     title: str | None = None,
     language: Language = Language.DE,
 ) -> Document:
-    """Baut aus Überschriften einen Abschnittsbaum."""
-    roots: list[Section] = []
-    stack: list[Section] = []
-    buffer: list[str] = []
-    document_title = title
+    """Liest Markdown ein. Deutsche Gliederungsformen zählen ebenfalls."""
+    return _document(text, source=source, title=title, language=language)
 
-    def flush() -> None:
-        content = "\n".join(buffer).strip()
-        buffer.clear()
-        if not content:
-            return
-        if stack:
-            existing = stack[-1].content
-            stack[-1].content = f"{existing}\n\n{content}".strip() if existing else content
-        else:
-            roots.append(Section(title=None, level=0, content=content))
 
-    for line in text.splitlines():
-        match = _HEADING.match(line)
-        if match is None:
-            buffer.append(line)
-            continue
-        flush()
-        level = len(match.group(1))
-        heading = match.group(2).strip()
-        if document_title is None and level == 1:
-            document_title = heading
-        section = Section(title=heading, level=level)
-        while stack and stack[-1].level >= level:
-            stack.pop()
-        if stack:
-            stack[-1].children.append(section)
-        else:
-            roots.append(section)
-        stack.append(section)
-    flush()
+def parse_plaintext(
+    text: str,
+    *,
+    source: str = "<text>",
+    title: str | None = None,
+    language: Language = Language.DE,
+) -> Document:
+    """Liest Klartext ein.
 
-    return Document(
-        source=source,
-        title=document_title,
-        language=language,
-        content=text,
-        sections=roots,
-    )
+    Auch hier werden Überschriften erkannt, damit ein Vertrag im Textformat
+    seine Gliederung behält.
+    """
+    return _document(text, source=source, title=title, language=language)

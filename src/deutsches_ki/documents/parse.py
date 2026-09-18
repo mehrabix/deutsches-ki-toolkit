@@ -7,11 +7,13 @@ from pathlib import Path
 from deutsches_ki.core.enums import Language
 from deutsches_ki.core.models import Document
 from deutsches_ki.documents.docling import parse_with_docling
+from deutsches_ki.documents.language import detect_language
 from deutsches_ki.documents.markdown import parse_markdown
+from deutsches_ki.documents.metadata_de import extract_metadata
 from deutsches_ki.documents.plaintext import parse_plaintext
 from deutsches_ki.errors import ParseError, UnsupportedFormatError
 
-__all__ = ["parse"]
+__all__ = ["parse", "read_text"]
 
 TEXT_SUFFIXES = frozenset({".txt", ".text", ".log"})
 MARKDOWN_SUFFIXES = frozenset({".md", ".markdown"})
@@ -44,6 +46,18 @@ def read_text(path: Path) -> str:
     raise ParseError(f"Datei konnte nicht als Text gelesen werden: {path}")
 
 
+def _finalize(document: Document, *, language: Language | None) -> Document:
+    """Ergänzt Sprache und deutsche Metadaten.
+
+    Die Sprache wird nur geschätzt, wenn sie nicht vorgegeben wurde. Metadaten
+    überschreiben nichts, was der Leser selbst gesetzt hat.
+    """
+    document.language = language or detect_language(document.content)
+    for key, value in extract_metadata(document.content).items():
+        document.metadata.setdefault(key, value)
+    return document
+
+
 def parse(
     source: str | Path,
     *,
@@ -51,7 +65,12 @@ def parse(
     language: Language | None = None,
     title: str | None = None,
 ) -> Document:
-    """Liest ein Dokument ein und gibt die Abschnittsstruktur zurück."""
+    """Liest ein Dokument ein und gibt die Abschnittsstruktur zurück.
+
+    Die Sprache wird erkannt, wenn keine angegeben ist. Zusätzlich werden
+    deutsche Geschäftsangaben wie Rechnungs- und Kundennummer in die Metadaten
+    übernommen.
+    """
     path = Path(source)
     if not path.exists():
         raise ParseError(f"Datei nicht gefunden: {path}")
@@ -59,23 +78,18 @@ def parse(
         raise ParseError(f"Keine reguläre Datei: {path}")
 
     suffix = path.suffix.lower()
-    resolved = language or Language.DE
 
     if parser in (None, "plaintext") and suffix in TEXT_SUFFIXES:
-        return parse_plaintext(
+        document = parse_plaintext(
             read_text(path),
             source=str(path),
             title=title or path.stem,
-            language=resolved,
         )
-    if parser in (None, "markdown") and suffix in MARKDOWN_SUFFIXES:
-        return parse_markdown(
-            read_text(path),
-            source=str(path),
-            title=title,
-            language=resolved,
-        )
-    if parser == "docling" or (parser is None and suffix in DOCLING_SUFFIXES):
-        return parse_with_docling(path, language=resolved, title=title or path.stem)
+    elif parser in (None, "markdown") and suffix in MARKDOWN_SUFFIXES:
+        document = parse_markdown(read_text(path), source=str(path), title=title)
+    elif parser == "docling" or (parser is None and suffix in DOCLING_SUFFIXES):
+        document = parse_with_docling(path, title=title or path.stem)
+    else:
+        raise UnsupportedFormatError(f"Kein Leser für die Endung '{suffix}'.")
 
-    raise UnsupportedFormatError(f"Kein Leser für die Endung '{suffix}'.")
+    return _finalize(document, language=language)
