@@ -1,22 +1,28 @@
 """Web-Demo für das Deutsche-KI-Toolkit.
 
-Zeigt vier Schritte: Struktur, sensible Daten, Suche, Frage. Jeder Schritt
-stellt die deutsche Behandlung einer naiven gegenüber, damit der Unterschied
-sichtbar wird statt behauptet.
+Zeigt fünf Schritte: Struktur, sensible Daten, Suche, Frage, Sprachmodell.
+Jeder Schritt stellt die deutsche Behandlung einer naiven gegenüber, damit der
+Unterschied sichtbar wird statt behauptet.
 
-Die Demo braucht außer Gradio nichts. Docling ist optional: Ohne Docling
-lassen sich Text- und Markdown-Dateien hochladen, aber keine PDFs.
+Vier Schritte brauchen außer Gradio nichts. Der fünfte lädt ein kleines
+Sprachmodell: Auf Hugging-Face-ZeroGPU läuft es auf der Grafikkarte, sonst auf
+dem Prozessor. Docling ist optional und nur für den PDF-Upload nötig.
 """
 
 from __future__ import annotations
 
 import html
+import os
+import threading
+from collections.abc import Callable, Sequence
+from typing import Any, cast
 
 import gradio as gr
 
 from deutsches_ki import GermanDocument
 from deutsches_ki.chunking import chunk_text
 from deutsches_ki.pii import anonymize, detect
+from deutsches_ki.providers.base import ChatMessage
 from deutsches_ki.text import search_tokens, split_sentences
 
 BEISPIEL_VERTRAG = """§ 1 Vertragsgegenstand
@@ -297,6 +303,145 @@ def schritt_frage(text: str, frage: str) -> tuple[str, str]:
     return kopf, "**Belege**\n\n" + belege + "\n\n**Herangezogene Stellen**\n\n" + fundstellen
 
 
+# --------------------------------------------------------------------------
+# Schritt 5: Antwort mit einem Sprachmodell
+# --------------------------------------------------------------------------
+
+MODELL = os.environ.get("DEMO_MODELL", "Qwen/Qwen2.5-1.5B-Instruct")
+GPU_SEKUNDEN = int(os.environ.get("DEMO_GPU_SEKUNDEN", "60"))
+
+_tokenizer: Any = None
+_modell: Any = None
+_gpu_aktiv = False
+
+
+def _vorladen() -> None:
+    """Holt die Gewichte in den Zwischenspeicher.
+
+    Das Herunterladen dauert länger, als ZeroGPU auf der kostenlosen Stufe
+    zugesteht. Deshalb passiert es beim Start und nicht im GPU-Abschnitt; dort
+    wird das Modell nur noch in den Grafikspeicher geschoben.
+    """
+    try:
+        from huggingface_hub import snapshot_download
+
+        snapshot_download(
+            MODELL,
+            allow_patterns=["*.json", "*.safetensors", "*.model", "*.txt"],
+        )
+    except Exception:
+        pass
+
+
+def _auf_der_gpu[F: Callable[..., Any]](fn: F) -> F:
+    """Kennzeichnet eine Funktion für ZeroGPU.
+
+    Hugging-Face-ZeroGPU verlangt mindestens eine so gekennzeichnete Funktion,
+    sonst startet der Space nicht. Lokal gibt es das Modul nicht, dann bleibt
+    die Funktion unverändert und läuft auf dem Prozessor.
+    """
+    try:
+        import spaces
+    except ImportError:
+        return fn
+
+    gpu = getattr(spaces, "GPU", None)
+    if gpu is None:  # ein anderes Modul dieses Namens
+        return fn
+
+    global _gpu_aktiv
+    _gpu_aktiv = True
+    return cast(F, gpu(duration=GPU_SEKUNDEN)(fn))
+
+
+def _modell_laden() -> tuple[Any, Any]:
+    """Lädt das Modell einmalig."""
+    global _tokenizer, _modell, _geraet
+    if _modell is not None:
+        return _tokenizer, _modell
+
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    _geraet = "cuda" if torch.cuda.is_available() else "cpu"
+    gewicht = torch.float16 if _geraet == "cuda" else torch.float32
+    _tokenizer = AutoTokenizer.from_pretrained(MODELL)
+    try:
+        _modell = AutoModelForCausalLM.from_pretrained(MODELL, dtype=gewicht)
+    except TypeError:  # transformers vor 5 kennt nur torch_dtype
+        _modell = AutoModelForCausalLM.from_pretrained(MODELL, torch_dtype=gewicht)
+    _modell = _modell.to(_geraet)
+    _modell.eval()
+    return _tokenizer, _modell
+
+
+@_auf_der_gpu
+def _erzeugen(messages: list[dict[str, str]], max_new_tokens: int = 200) -> str:
+    """Erzeugt eine Antwort. Auf ZeroGPU läuft dieser Teil auf der Grafikkarte."""
+    import torch
+
+    tokenizer, model = _modell_laden()
+    text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    eingabe = tokenizer(text, return_tensors="pt").to(model.device)
+    with torch.no_grad():
+        ausgabe = model.generate(
+            **eingabe,
+            max_new_tokens=max_new_tokens,
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    neu = ausgabe[0][eingabe["input_ids"].shape[-1] :]
+    return tokenizer.decode(neu, skip_special_tokens=True).strip()
+
+
+class LokalesModell:
+    """Ein ChatProvider über das Modell dieser Demo."""
+
+    name = MODELL
+
+    def generate(self, messages: Sequence[ChatMessage], **kwargs: Any) -> str:
+        """Gibt den Text der Antwort zurück."""
+        gespraech = [{"role": m.role, "content": m.content} for m in messages]
+        return _erzeugen(gespraech)
+
+
+def schritt_modell(text: str, frage: str) -> tuple[str, str]:
+    """Beantwortet eine Frage mit dem Sprachmodell und prüft die Quellen."""
+    document = _document(text or "")
+    try:
+        antwort = document.search(frage or "", top_k=3, llm=LokalesModell())
+    except Exception as error:
+        return f"**Das Modell lief nicht durch.**\n\n`{type(error).__name__}: {error}`", ""
+
+    bericht = antwort.metadata.get("citations", {})
+    genannt = list(bericht.get("cited") or [])
+    unbekannt = list(bericht.get("unknown") or [])
+    gueltig = list(bericht.get("valid") or [])
+
+    if not genannt:
+        urteil = "**Keine Quelle genannt.** Die Antwort steht ohne Beleg da."
+    elif unbekannt:
+        urteil = f"**Erfundene Quelle {unbekannt}** — so viele Quellen gab es nicht."
+    else:
+        urteil = f"**Alle genannten Quellen gibt es:** {gueltig}."
+
+    geraet = "Hugging-Face-ZeroGPU" if _gpu_aktiv else "Prozessor"
+    kopf = (
+        f"**Modell:** `{MODELL}` auf {geraet}\n\n"
+        f"**Antwort**\n\n{antwort.answer}\n\n"
+        f"**Quellenprüfung**\n\n{urteil}"
+    )
+
+    quellen = _markdown_table(
+        ["Nummer", "Abschnitt", "Punktzahl"],
+        [
+            [str(nummer), str(quelle.section or "—"), f"{quelle.score:.4f}"]
+            for nummer, quelle in enumerate(antwort.citations, start=1)
+        ],
+    )
+    return kopf, "**Mitgegebene Quellen**\n\n" + quellen
+
+
 def _datei_lesen(datei: str | None) -> tuple[str, str, str, str]:
     """Liest eine hochgeladene Datei und legt sie in alle Felder."""
     if not datei:
@@ -311,6 +456,8 @@ def _datei_lesen(datei: str | None) -> tuple[str, str, str, str]:
 # --------------------------------------------------------------------------
 # Oberfläche
 # --------------------------------------------------------------------------
+
+threading.Thread(target=_vorladen, daemon=True).start()
 
 
 with gr.Blocks(title="Deutsches KI-Toolkit") as demo:
@@ -398,6 +545,24 @@ with gr.Blocks(title="Deutsches KI-Toolkit") as demo:
             schritt_frage,
             inputs=[frage_text, frage_frage],
             outputs=[frage_antwort, frage_belege],
+        )
+
+    with gr.Tab("Sprachmodell"):
+        gr.Markdown(
+            "Ein kleines Sprachmodell formuliert die Antwort aus denselben "
+            "Abschnitten und läuft dabei auf der Grafikkarte. Danach prüft das "
+            "Toolkit, ob die genannten Quellennummern wirklich existieren. Ein "
+            "Modell, das `[9]` schreibt, obwohl es drei Quellen gab, fällt hier auf."
+        )
+        modell_text = gr.Textbox(label="Text", lines=8, value=BEISPIEL_VERTRAG)
+        modell_frage = gr.Textbox(label="Frage", value=BEISPIEL_FRAGE)
+        modell_button = gr.Button("Antwort erzeugen", variant="primary")
+        modell_antwort = gr.Markdown()
+        modell_quellen = gr.Markdown()
+        modell_button.click(
+            schritt_modell,
+            inputs=[modell_text, modell_frage],
+            outputs=[modell_antwort, modell_quellen],
         )
 
     with gr.Accordion("Eigene Datei verwenden", open=False):

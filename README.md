@@ -1156,19 +1156,30 @@ POSTGRES_IMAGE=deutsches-ki-postgres:17 docker compose -f docker/compose.yaml up
 
 ## Web-Demo
 
-Unter `spaces/` liegt eine Demo mit vier Schritten: zerlegen, sensible Daten
-finden, suchen, beantworten. Jeder Schritt stellt die deutsche Behandlung einer
-naiven gegenüber, damit der Unterschied sichtbar wird statt behauptet. Lokal
-startet sie so:
+Unter `demo/` liegt eine Demo mit fünf Schritten: zerlegen, sensible Daten
+finden, suchen, beantworten, mit einem Sprachmodell formulieren. Die ersten vier
+stellen die deutsche Behandlung einer naiven gegenüber, damit der Unterschied
+sichtbar wird statt behauptet. Lokal startet sie so:
 
 ```bash
 uv sync --extra demo
-uv run python spaces/app.py
+uv run python demo/app.py
 ```
 
-Die Demo braucht außer Gradio nichts. Für PDF-Upload kommt `docling` dazu, für
-größere Modelle `embeddings`. Alles läuft auf dem eigenen Rechner; es wird
-nichts gespeichert und nichts nach außen gegeben.
+Der fünfte Schritt lädt ein kleines Sprachmodell und lässt es die Antwort
+formulieren. Auf Hugging-Face-ZeroGPU übernimmt das die Grafikkarte, lokal der
+Prozessor. Interessant ist weniger die Antwort als das, was danach passiert: Das
+Toolkit prüft die genannten Quellennummern gegen die mitgegebenen Abschnitte.
+Ein Modell, das `[9]` schreibt, obwohl es drei Quellen gab, fällt damit auf,
+statt durchzurutschen.
+
+Die ersten vier Schritte brauchen außer Gradio nichts. Für PDF-Upload kommt
+`docling` dazu, für den fünften Schritt `torch` und `transformers`. Alles läuft
+auf dem eigenen Rechner; es wird nichts gespeichert und nichts nach außen
+gegeben.
+
+Dieselbe Demo läuft ohne Installation unter
+<https://huggingface.co/spaces/mehrabix/deutsches-ki-toolkit>.
 
 ---
 
