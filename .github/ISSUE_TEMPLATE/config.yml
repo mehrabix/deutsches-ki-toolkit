@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Sicherheitslücke melden
+    url: https://github.com/mehrabix/deutsches-ki-toolkit/security/policy
+    about: Bitte melde Sicherheitsprobleme nicht über öffentliche Issues.
