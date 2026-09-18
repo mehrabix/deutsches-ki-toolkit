@@ -140,6 +140,17 @@ class Chunk(_Model):
         value = self.metadata.get("section")
         return value if isinstance(value, str) else None
 
+    @property
+    def index_text(self) -> str:
+        """Der Text, der indiziert wird: Abschnittstitel plus Inhalt.
+
+        Deutsche Abschnittstitel tragen das Thema („§ 4 Zahlungsbedingungen“).
+        Ohne den Titel findet eine Frage nach der Zahlungsfrist den Abschnitt
+        nicht, in dem nur von „Zahlung“ die Rede ist.
+        """
+        section = self.section
+        return f"{section}\n{self.content}" if section else self.content
+
 
 class Citation(_Model):
     """Ein Beleg für eine Antwort."""
