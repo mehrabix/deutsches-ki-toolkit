@@ -4,6 +4,34 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.0]
+
+Erste stabile Fassung. Die fünf Vorabversionen davor waren in der
+Paketverwaltung als Vorabversion gekennzeichnet, diese nicht mehr:
+`pip install deutsches-ki-toolkit` genügt, `--pre` ist nicht mehr nötig.
+
+Gegenüber 0.4.0a1, der letzten Fassung mit eigenem Eintrag, enthält sie die
+Korrekturen aus den Vorabversionen 0.4.1a1 und 0.4.1a2:
+
+- **Die Anonymisierung wirkte nur an der Oberfläche.** `anonymize()` ersetzte
+  den Text des Dokuments, ließ aber den Abschnittsbaum stehen. Der Chunker
+  liest den Baum und nicht den Text, also trugen alle Chunks weiter die
+  Originaldaten – und damit jede Fundstelle und jede RAG-Antwort, obwohl die
+  Anonymisierung gemeldet hatte, dass sie gelaufen ist. Der Baum wird jetzt aus
+  dem bereinigten Text neu gebaut.
+- **Keine Gliederung bei eingefügtem Text.** Ein per `from_text` übergebenes
+  Dokument hatte keinen Abschnittsbaum; das strukturelle Chunking fiel auf
+  einen einzigen Block zurück.
+- **Die Kommandozeile meldete die falsche Version.** Die Version stand
+  zusätzlich als Zeichenkette im Quelltext und lief beim Veröffentlichen
+  auseinander. Sie wird jetzt aus den Paketangaben gelesen.
+- **Namenskonflikt im Demo-Ordner.** Der Ordner hieß `spaces/` und verdeckte
+  beim Import das Modul `spaces` von Hugging-Face-ZeroGPU. Er heißt jetzt
+  `demo/`.
+
+Der Entwicklungstand steht damit auf Beta statt Alpha. Die einzelnen
+Änderungen sind in den Einträgen zu 0.4.1a2 und 0.4.1a1 darunter aufgeführt.
+
 ## [0.4.1a2]
 
 Behebt eine falsche Versionsangabe, die in 0.4.1a1 steckte.

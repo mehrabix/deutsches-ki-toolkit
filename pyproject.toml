@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "deutsches-ki-toolkit"
-version = "0.4.1a2"
+version = "0.5.0"
 description = "Deutschsprachige KI-Infrastruktur für Dokumente, Datenschutz, Suche und RAG."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -21,7 +21,7 @@ keywords = [
     "deutsch",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Natural Language :: German",
