@@ -1,0 +1,51 @@
+{
+  "name": "german_compounds",
+  "description": "Zerlegung deutscher Komposita über die Wortliste. Erwartet werden kleingeschriebene Bestandteile in der Reihenfolge, in der sie im Wort stehen.",
+  "cases": [
+    {
+      "input": "Versicherungsbeitrag",
+      "check": "compound_parts",
+      "expected": ["versicherung", "beitrag"]
+    },
+    {
+      "input": "Krankenversicherung",
+      "check": "compound_parts",
+      "expected": ["kranken", "versicherung"]
+    },
+    {
+      "input": "Arbeitsunfähigkeitsbescheinigung",
+      "check": "compound_parts",
+      "expected": ["arbeit", "unfähigkeit", "bescheinigung"]
+    },
+    {
+      "input": "Kündigungsfrist",
+      "check": "compound_parts",
+      "expected": ["kündigung", "frist"]
+    },
+    {
+      "input": "Geschäftsstraße",
+      "check": "compound_parts",
+      "expected": ["geschäft", "straße"]
+    },
+    {
+      "input": "Vertrag",
+      "check": "compound_parts",
+      "expected": ["vertrag"]
+    },
+    {
+      "input": "Xyzzyx",
+      "check": "compound_parts",
+      "expected": ["xyzzyx"]
+    },
+    {
+      "input": "Kündigungsfrist",
+      "check": "search_tokens_contains",
+      "expected": ["kuendigungsfrist", "kuendigung", "frist"]
+    },
+    {
+      "input": "Arbeitsunfähigkeitsbescheinigung",
+      "check": "search_tokens_contains",
+      "expected": ["arbeit", "unfaehigkeit", "bescheinigung"]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "name": "german_pii",
+  "description": "Erkennung deutscher Kennungen. Prüfsummen müssen stimmen, Kontextwörter müssen passen.",
+  "cases": [
+    {
+      "input": "Überweisung auf DE89 3704 0044 0532 0130 00 bitte.",
+      "check": "pii_types",
+      "expected": ["DE_IBAN"]
+    },
+    {
+      "input": "USt-IdNr.: DE123456789",
+      "check": "pii_types",
+      "expected": ["DE_VAT_ID"]
+    },
+    {
+      "input": "Steuernummer: 12/345/67890",
+      "check": "pii_types",
+      "expected": ["DE_TAX_NUMBER"]
+    },
+    {
+      "input": "Steuer-ID 12 345 678 911",
+      "check": "pii_types",
+      "expected": ["DE_TAX_ID"]
+    },
+    {
+      "input": "Eingetragen unter HRB 12345 B",
+      "check": "pii_types",
+      "expected": ["DE_HR_NUMBER"]
+    },
+    {
+      "input": "Personalausweis T22000129",
+      "check": "pii_types",
+      "expected": ["DE_ID_CARD"]
+    },
+    {
+      "input": "BIC: DEUTDEFF",
+      "check": "pii_types",
+      "expected": ["DE_BIC"]
+    },
+    {
+      "input": "Kontakt: max.mustermann@example.de",
+      "check": "pii_types",
+      "expected": ["EMAIL"]
+    },
+    {
+      "input": "Mobil: 0171 1234567",
+      "check": "pii_types",
+      "expected": ["PHONE"]
+    },
+    {
+      "input": "PLZ 10115",
+      "check": "pii_types",
+      "expected": ["DE_PLZ"]
+    },
+    {
+      "input": "DE89 3704 0044 0532 0130 01",
+      "check": "pii_types",
+      "expected": []
+    },
+    {
+      "input": "12345678900",
+      "check": "pii_types",
+      "expected": []
+    },
+    {
+      "input": "Code 12/345/67890",
+      "check": "pii_types",
+      "expected": []
+    },
+    {
+      "input": "Rechnungsnummer: RE-2024-001",
+      "check": "pii_texts",
+      "expected": ["RE-2024-001"]
+    },
+    {
+      "input": "Kundennummer: 4711",
+      "check": "pii_texts",
+      "expected": ["4711"]
+    },
+    {
+      "input": "Bitte an DE89 3704 0044 0532 0130 00 überweisen.",
+      "check": "anonymize_redact",
+      "expected": "Bitte an [DE_IBAN] überweisen."
+    }
+  ]
+}

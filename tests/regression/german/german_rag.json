@@ -1,0 +1,41 @@
+{
+  "name": "german_rag",
+  "description": "Suche über die synthetischen Testdateien. Erwartet wird der Abschnitt, der die Frage beantwortet.",
+  "cases": [
+    {
+      "input": "Wie lange ist die Zahlungsfrist?",
+      "check": "search_top_section",
+      "expected": "§ 4 Zahlungsbedingungen"
+    },
+    {
+      "input": "Wie lange ist die Kündigungsfrist?",
+      "check": "search_top_section",
+      "expected": "§ 7 Kündigung"
+    },
+    {
+      "input": "Wie oft erfolgt die Wartung der Anlage?",
+      "check": "search_top_section",
+      "expected": "Wartungsintervalle"
+    },
+    {
+      "input": "Wann muss die Arbeitsunfähigkeitsbescheinigung vorliegen?",
+      "check": "search_top_section",
+      "expected": "Arbeitsunfähigkeitsbescheinigung"
+    },
+    {
+      "input": "Wie lange dauert die Lieferung von Ersatzteilen?",
+      "check": "search_top_section",
+      "expected": "Ersatzteile"
+    },
+    {
+      "input": "Frist",
+      "check": "search_finds_text",
+      "expected": "Kündigungsfrist"
+    },
+    {
+      "input": "Beitrag",
+      "check": "search_finds_text",
+      "expected": "Versicherungsbeitrag"
+    }
+  ]
+}

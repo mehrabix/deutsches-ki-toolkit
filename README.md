@@ -30,11 +30,14 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
 - Deutsche PII-Erkennung mit Prüfsummen, fünf Anonymisierungsarten
 - Strukturbasiertes Chunking mit Abschnitts- und Seitenangaben
 - Suche im Arbeitsspeicher: Vektor und lexikalisch, vereint per RRF
-- PostgreSQL mit pgvector, deutsche Volltextsuche ohne `unaccent-Trick`
+- Deutsche Volltextsuche ohne `unaccent-Trick`
   (gegen echtes PostgreSQL geprüft, auch in der CI)
 - Lexikalisches Reranking, RAG-Engine mit Prüfung der Quellenangaben
 - Prompt-Injection- und Geheimniserkennung
 - Bewertung mit Recall, MRR und nDCG samt Datensatz
+- Erkennung der Dokumentart, Terminologie-Prüfung, Stilprüfung
+- Fachpakete für Recht, Finanzen, Personal, Technik und Industrie
+- Leistungsmessung und Vergleich von Embedding-Modellen
 - Kommandozeile, MCP-Werkzeuge, Docker-Image
 - spaCy- und Presidio-Detektoren gegen ein echtes deutsches Modell geprüft,
   samt CI-Lauf. Dabei bestätigt sich der Ausgangspunkt des Projekts: Presidio
@@ -42,12 +45,16 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
   eigenen Muster schon.
 
 Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
-dem Hashing-Modell: Recall@1 0,75, Recall@5 1,00, MRR 0,84, nDCG@5 0,88.
+dem Hashing-Modell: Recall@1 0,83, Recall@5 1,00, MRR 0,90, nDCG@5 0,93.
 Nachvollziehbar mit:
 
 ```bash
 deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixtures
 ```
+
+Vorher waren es Recall@1 0,75 und MRR 0,84. Der Unterschied kommt von den
+groben Wortstämmen in den Such-Token: „Ersatzteilen“ findet jetzt
+„Ersatzteile“. Genau für solche Vergleiche ist der Bewertungslauf da.
 
 **Vorhanden, aber noch nicht gegen echte Systeme geprüft**
 
@@ -62,9 +69,9 @@ aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
 
 **Noch nicht gebaut**
 
-- Bewertung der Antwortqualität (Treue, Relevanz) über ein Sprachmodell
-- Dokumentklassifikation, Terminologie- und Stilprüfung
-- Domänen-Pakete und Enterprise-Datenbankanbindung
+- Bewertung der Antwortqualität über ein Sprachmodell (Treue, Relevanz) –
+  die deterministischen Näherungen gibt es, das Urteil durch ein Modell nicht
+- Enterprise-Datenbankanbindung (Fragen in SQL übersetzen)
 - Web-Demo und Benchmark-Website
 - Feintuning
 

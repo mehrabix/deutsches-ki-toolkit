@@ -1,0 +1,56 @@
+{
+  "name": "german_legal",
+  "description": "Deutsche Rechts- und Verwaltungssprache: Abkürzungen, Paragraphen, Umlaute und Ergänzungsstriche.",
+  "cases": [
+    {
+      "input": "§ 4 Abs. 2 regelt die Zahlung.",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Dr. Müller kommt heute. Danach geht er.",
+      "check": "sentence_count",
+      "expected": 2
+    },
+    {
+      "input": "Wir treffen uns z. B. am Montag. Danach fahren wir.",
+      "check": "sentence_count",
+      "expected": 2
+    },
+    {
+      "input": "Der Preis beträgt 3.500 Euro. Danach steigt er.",
+      "check": "sentence_count",
+      "expected": 2
+    },
+    {
+      "input": "vgl. § 4 Abs. 2 VOB/B Nr. 5",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Die Straße ist schön.",
+      "check": "normalize_search",
+      "expected": "die strasse ist schoen"
+    },
+    {
+      "input": "Haupt- und Nebensatz",
+      "check": "normalize_search",
+      "expected": "hauptsatz und nebensatz"
+    },
+    {
+      "input": "Die Straße ist schön.",
+      "check": "normalize_display",
+      "expected": "Die Straße ist schön."
+    },
+    {
+      "input": "Rechnung Nr. 5 ist offen.",
+      "check": "classify_type",
+      "expected": "unknown"
+    },
+    {
+      "input": "§ 1 Vertragsgegenstand\nDer Auftraggeber beauftragt den Auftragnehmer.\n§ 2 Vergütung\n§ 3 Zahlungsbedingungen\nDie Kündigungsfrist beträgt drei Monate.",
+      "check": "classify_type",
+      "expected": "contract"
+    }
+  ]
+}
