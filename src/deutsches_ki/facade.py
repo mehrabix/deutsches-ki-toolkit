@@ -21,6 +21,7 @@ from deutsches_ki.providers.base import ChatProvider
 from deutsches_ki.rag import DeutschRAG
 from deutsches_ki.reranking import Reranker, get_reranker
 from deutsches_ki.retrieval import InMemoryRetriever
+from deutsches_ki.security import SecurityReport, scan_text
 
 __all__ = ["GermanDocument"]
 
@@ -73,6 +74,14 @@ class GermanDocument:
         threshold = min_confidence if min_confidence is not None else 0.0
         self._entities = detect(self.document.content, min_confidence=threshold)
         return self._entities
+
+    def scan(self) -> SecurityReport:
+        """Prüft das Dokument auf Prompt-Injection und Geheimnisse.
+
+        Dokumentinhalt ist fremder Inhalt. Wer ihn in einen Prompt gibt, sollte
+        vorher wissen, was darin steht.
+        """
+        return scan_text(self.document.content)
 
     def anonymize(
         self,

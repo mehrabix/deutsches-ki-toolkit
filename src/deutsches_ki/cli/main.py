@@ -28,6 +28,7 @@ from deutsches_ki.providers import ChatProvider, get_provider
 from deutsches_ki.rag import DeutschRAG
 from deutsches_ki.reranking import get_reranker
 from deutsches_ki.retrieval import InMemoryRetriever
+from deutsches_ki.security import scan_text
 from deutsches_ki.storage import PgVectorStore
 
 app = typer.Typer(
@@ -151,6 +152,34 @@ def pii_cmd(
         console.print("[green]Keine sensiblen Stellen gefunden.[/green]")
         return
     console.print(_entities_table(entities))
+
+
+@app.command("scan")
+def scan_cmd(
+    path: Annotated[Path, typer.Argument(help="Dokument, das geprüft wird.")],
+    json_output: Annotated[bool, typer.Option("--json", help="Ausgabe als JSON.")] = False,
+) -> None:
+    """Prüft ein Dokument auf Prompt-Injection und Geheimnisse."""
+    document = _load(path)
+    report = scan_text(document.content)
+
+    if json_output:
+        console.print_json(report.model_dump_json())
+        return
+    if report.is_clean:
+        console.print("[green]Keine Auffälligkeiten gefunden.[/green]")
+        return
+
+    table = Table(title="Auffälligkeiten")
+    table.add_column("Art")
+    table.add_column("Regel")
+    table.add_column("Einstufung")
+    table.add_column("Fund")
+    for finding in report.injections:
+        table.add_row("Injection", finding.rule, finding.severity, finding.text[:50])
+    for secret in report.secrets:
+        table.add_row("Geheimnis", secret.rule, secret.severity, secret.masked)
+    console.print(table)
 
 
 @app.command("anonymize")
