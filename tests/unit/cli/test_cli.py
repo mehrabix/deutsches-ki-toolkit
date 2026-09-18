@@ -128,10 +128,67 @@ def test_search_command(tmp_path: Path) -> None:
     assert "Quellen" in result.stdout
 
 
-def test_ingest_command_reports_not_available(tmp_path: Path) -> None:
+def test_ingest_command_without_dsn(tmp_path: Path) -> None:
+    (tmp_path / "vertrag.md").write_text(CONTRACT, encoding="utf-8")
+
     result = runner.invoke(app, ["ingest", str(tmp_path)])
+
     assert result.exit_code == 1
-    assert "Noch nicht verfügbar" in result.stdout
+    assert "Kein DSN" in result.stdout
+
+
+def test_ask_command_without_llm(tmp_path: Path) -> None:
+    (tmp_path / "vertrag.md").write_text(CONTRACT, encoding="utf-8")
+
+    result = runner.invoke(
+        app,
+        ["ask", "Wie lange ist die Zahlungsfrist?", "--corpus", str(tmp_path)],
+    )
+
+    assert result.exit_code == 0
+    assert "Kein Sprachmodell eingetragen" in result.stdout
+    assert "30 Tagen" in result.stdout
+
+
+def test_evaluate_command(tmp_path: Path) -> None:
+    corpus = tmp_path / "korpus"
+    corpus.mkdir()
+    (corpus / "vertrag.md").write_text(CONTRACT, encoding="utf-8")
+    dataset = tmp_path / "datensatz.yaml"
+    dataset.write_text(
+        "name: mini\n"
+        "cases:\n"
+        "  - question: Wie lange ist die Zahlungsfrist?\n"
+        "    expected_sources: ['vertrag.md']\n",
+        encoding="utf-8",
+    )
+
+    result = runner.invoke(app, ["evaluate", str(dataset), "--corpus", str(corpus)])
+
+    assert result.exit_code == 0
+    assert "Bewertung: mini" in result.stdout
+    assert "Recall@1" in result.stdout
+
+
+def test_evaluate_command_writes_json(tmp_path: Path) -> None:
+    corpus = tmp_path / "korpus"
+    corpus.mkdir()
+    (corpus / "vertrag.md").write_text(CONTRACT, encoding="utf-8")
+    dataset = tmp_path / "datensatz.yaml"
+    dataset.write_text(
+        "name: mini\ncases:\n  - question: Wie lange?\n    expected_sources: ['vertrag.md']\n",
+        encoding="utf-8",
+    )
+    target = tmp_path / "bericht.json"
+
+    result = runner.invoke(
+        app,
+        ["evaluate", str(dataset), "--corpus", str(corpus), "-o", str(target)],
+    )
+
+    assert result.exit_code == 0
+    assert target.exists()
+    assert '"mrr"' in target.read_text(encoding="utf-8")
 
 
 def test_parse_command_missing_file() -> None:

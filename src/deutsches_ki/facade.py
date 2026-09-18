@@ -112,11 +112,6 @@ class GermanDocument:
             overlap=overlap if overlap is not None else self.settings.chunking.overlap,
             document_type=self.settings.document_type,
         )
-        # Die Herkunft kommt in die Metadaten, damit später jede Fundstelle den
-        # Dateinamen nennen kann.
-        name = self.document.source or self.document.title or ""
-        for chunk in chunks:
-            chunk.metadata.setdefault("document", name)
         self._chunks = chunks
         return chunks
 

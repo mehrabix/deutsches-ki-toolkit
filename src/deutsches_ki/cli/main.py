@@ -4,7 +4,7 @@ import contextlib
 import json
 import sys
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -22,8 +22,13 @@ from deutsches_ki.documents.parse import (
 )
 from deutsches_ki.embeddings import get_embedder
 from deutsches_ki.errors import DeutschesKiError
+from deutsches_ki.evaluation import EvaluationDataset, evaluate_retriever
 from deutsches_ki.pii import anonymize, detect
+from deutsches_ki.providers import ChatProvider, get_provider
+from deutsches_ki.rag import DeutschRAG
+from deutsches_ki.reranking import get_reranker
 from deutsches_ki.retrieval import InMemoryRetriever
+from deutsches_ki.storage import PgVectorStore
 
 app = typer.Typer(
     add_completion=False,
@@ -250,28 +255,185 @@ def search_cmd(
         console.print(f"  {result.chunk.section or '–'}{location}")
 
 
+def _build_rag(directory: Path, settings: Settings, model: str) -> DeutschRAG:
+    chunks = _chunks_for(directory, settings)
+    if not chunks:
+        console.print("[yellow]Keine passenden Dateien gefunden.[/yellow]")
+        raise typer.Exit(code=1)
+    retriever = InMemoryRetriever(get_embedder(model))
+    retriever.add(chunks)
+
+    reranker = get_reranker(settings.reranking.provider) if settings.reranking.enabled else None
+    return DeutschRAG(
+        retriever,
+        reranker=reranker,
+        llm=_llm_from_settings(settings),
+        candidates=settings.retrieval.top_k,
+        top_k=min(settings.reranking.top_k, settings.retrieval.top_k),
+    )
+
+
+def _llm_from_settings(settings: Settings) -> ChatProvider | None:
+    """Baut den Anbieter aus der Konfiguration, falls einer eingetragen ist."""
+    provider = settings.llm.provider
+    if not provider:
+        return None
+    kwargs: dict[str, Any] = {}
+    if settings.llm.model:
+        kwargs["model"] = settings.llm.model
+    if provider == "ollama":
+        if settings.llm.base_url:
+            kwargs["host"] = settings.llm.base_url
+    else:
+        if settings.llm.base_url:
+            kwargs["base_url"] = settings.llm.base_url
+        if settings.llm.api_key:
+            kwargs["api_key"] = settings.llm.api_key
+    return get_provider(provider, **kwargs)
+
+
+def _print_answer(answer_text: str, citations: list[Any]) -> None:
+    console.print(answer_text or "[yellow]Keine Antwort gefunden.[/yellow]")
+    if citations:
+        console.print("\n[bold]Quellen:[/bold]")
+        for citation in citations:
+            page = f" (Seite {citation.page})" if citation.page else ""
+            console.print(f"  {citation.document} – {citation.section or '–'}{page}")
+
+
 @app.command("ingest")
 def ingest_cmd(
     directory: Annotated[Path, typer.Argument(help="Ordner mit Dokumenten.")],
+    dsn: Annotated[
+        str | None, typer.Option("--dsn", help="PostgreSQL-DSN. Sonst aus der Konfiguration.")
+    ] = None,
+    model: Annotated[str, typer.Option("--model", help="Embedding-Modell.")] = "hashing",
+    drop: Annotated[bool, typer.Option("--drop", help="Tabellen vorher entfernen.")] = False,
 ) -> None:
-    """Nimmt Dokumente in PostgreSQL auf (noch nicht verfügbar)."""
-    console.print(
-        "[yellow]Noch nicht verfügbar: Die PostgreSQL-Anbindung (pgvector) folgt "
-        "im nächsten Schritt. Nutze solange 'search', das im Arbeitsspeicher sucht.[/yellow]"
-    )
-    raise typer.Exit(code=1)
+    """Nimmt Dokumente in PostgreSQL mit pgvector auf."""
+    settings = Settings.load()
+    target = dsn or settings.storage.dsn
+    if not target:
+        console.print(
+            "[yellow]Kein DSN angegeben. Nutze --dsn oder trage storage.dsn in "
+            "deutsches-ki.yaml ein.[/yellow]"
+        )
+        raise typer.Exit(code=1)
+
+    embedder = get_embedder(model)
+    store = PgVectorStore(target, embedder=embedder)
+    if drop:
+        store.drop_schema()
+    store.create_schema()
+
+    files = _source_files(directory)
+    documents = 0
+    chunks_total = 0
+    for file in files:
+        try:
+            document = parse(file)
+        except DeutschesKiError as error:
+            console.print(f"[yellow]Übersprungen: {file} ({error})[/yellow]")
+            continue
+        chunks = chunk_document(
+            document,
+            strategy=settings.chunking.strategy,
+            max_tokens=settings.chunking.max_tokens,
+            overlap=settings.chunking.overlap,
+            document_type=settings.document_type,
+        )
+        if not chunks:
+            continue
+        store.add_document(document)
+        for chunk in chunks:
+            chunk.document_id = document.id
+        store.add_chunks(chunks)
+        documents += 1
+        chunks_total += len(chunks)
+
+    store.close()
+    console.print(f"[green]{documents} Dokumente, {chunks_total} Chunks aufgenommen.[/green]")
 
 
 @app.command("ask")
 def ask_cmd(
     question: Annotated[str, typer.Argument(help="Frage an die Dokumente.")],
+    directory: Annotated[Path, typer.Option("--corpus", help="Ordner mit Dokumenten.")] = Path("."),
+    top_k: Annotated[int, typer.Option("--top-k", help="Anzahl der Quellen.")] = 5,
+    model: Annotated[str, typer.Option("--model", help="Embedding-Modell.")] = "hashing",
 ) -> None:
-    """Beantwortet eine Frage mit einem Sprachmodell (noch nicht verfügbar)."""
-    console.print(
-        "[yellow]Noch nicht verfügbar: Die Anbindung von Ollama und vLLM folgt im "
-        "nächsten Schritt. Nutze solange 'search', das belegte Fundstellen liefert.[/yellow]"
-    )
-    raise typer.Exit(code=1)
+    """Beantwortet eine Frage mit Quellenangabe.
+
+    Ohne eingetragenes Sprachmodell kommt der bestpassende Abschnitt zurück,
+    ausdrücklich als Auswahl und nicht als formulierte Antwort.
+    """
+    settings = Settings.load()
+    if settings.llm.provider is None:
+        console.print(
+            "[yellow]Kein Sprachmodell eingetragen. Es wird der bestpassende "
+            "Abschnitt ausgegeben. Trage llm.provider in deutsches-ki.yaml ein, "
+            "zum Beispiel 'ollama'.[/yellow]\n"
+        )
+    rag = _build_rag(directory, settings, model)
+    answer = rag.ask(question, top_k=top_k)
+    _print_answer(answer.answer, answer.citations)
+
+
+@app.command("evaluate")
+def evaluate_cmd(
+    dataset: Annotated[Path, typer.Argument(help="Datensatz als YAML oder JSON.")],
+    corpus: Annotated[Path, typer.Option("--corpus", help="Ordner mit Dokumenten.")] = Path(
+        "datasets/fixtures"
+    ),
+    top_k: Annotated[
+        int, typer.Option("--top-k", help="Wie viele Treffer ausgewertet werden.")
+    ] = 10,
+    model: Annotated[str, typer.Option("--model", help="Embedding-Modell.")] = "hashing",
+    json_output: Annotated[bool, typer.Option("--json", help="Bericht als JSON.")] = False,
+    output: Annotated[
+        Path | None, typer.Option("-o", "--output", help="Bericht als Datei ablegen.")
+    ] = None,
+) -> None:
+    """Bewertet die Suche gegen einen Datensatz mit erwarteten Fundstellen."""
+    settings = Settings.load()
+    try:
+        cases = EvaluationDataset.from_file(dataset)
+    except DeutschesKiError as error:
+        console.print(f"[red]{error}[/red]")
+        raise typer.Exit(code=1) from error
+
+    chunks = _chunks_for(corpus, settings)
+    if not chunks:
+        console.print("[yellow]Keine passenden Dateien im Korpus gefunden.[/yellow]")
+        raise typer.Exit(code=1)
+
+    retriever = InMemoryRetriever(get_embedder(model))
+    retriever.add(chunks)
+    report = evaluate_retriever(retriever, cases, top_k=top_k)
+
+    payload = report.model_dump(mode="json")
+    if output is not None:
+        output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        console.print(f"[green]Bericht geschrieben: {output}[/green]")
+    if json_output:
+        console.print_json(json.dumps(payload, ensure_ascii=False))
+        return
+
+    table = Table(title=f"Bewertung: {report.dataset} ({report.cases} Fälle)")
+    table.add_column("Metrik")
+    table.add_column("Wert", justify="right")
+    table.add_row("Recall@1", f"{report.recall.get('1', 0.0):.2f}")
+    table.add_row("Recall@5", f"{report.recall.get('5', 0.0):.2f}")
+    table.add_row("Recall@10", f"{report.recall.get('10', 0.0):.2f}")
+    table.add_row("MRR", f"{report.mrr:.2f}")
+    table.add_row("nDCG@5", f"{report.ndcg.get('5', 0.0):.2f}")
+    table.add_row("Trefferquote@5", f"{report.hit_rate.get('5', 0.0):.2f}")
+    console.print(table)
+
+    if report.unanswered:
+        console.print("\n[bold]Ohne Treffer:[/bold]")
+        for question in report.unanswered:
+            console.print(f"  – {question}")
 
 
 if __name__ == "__main__":  # pragma: no cover

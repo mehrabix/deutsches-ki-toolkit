@@ -8,6 +8,7 @@ bleibt zusammen; ein Paragraphenabschnitt wird nicht auseinandergerissen.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from pathlib import PurePosixPath
 
 from deutsches_ki.chunking.tokenize import estimate_tokens, split_tokens
 from deutsches_ki.core.enums import ChunkStrategy
@@ -99,7 +100,12 @@ def _pack(units: list[_Unit], max_tokens: int, overlap: int) -> list[list[_Unit]
     return groups
 
 
-def _make_chunk(document: Document, units: list[_Unit], document_type: str | None) -> Chunk:
+def _make_chunk(
+    document: Document,
+    units: list[_Unit],
+    document_type: str | None,
+    document_name: str,
+) -> Chunk:
     first = units[0]
     return Chunk(
         document_id=document.id,
@@ -111,6 +117,7 @@ def _make_chunk(document: Document, units: list[_Unit], document_type: str | Non
             "page": first.page,
             "language": document.language.value,
             "document_type": document_type,
+            "document": document_name,
             "paragraphs": len(units),
         },
     )
@@ -121,6 +128,7 @@ def _chunk_structural(
     max_tokens: int,
     overlap: int,
     document_type: str | None,
+    document_name: str,
 ) -> list[Chunk]:
     chunks: list[Chunk] = []
     for section, path in _iter_sections(document.sections):
@@ -139,7 +147,7 @@ def _chunk_structural(
                     )
                 )
         chunks.extend(
-            _make_chunk(document, group, document_type)
+            _make_chunk(document, group, document_type, document_name)
             for group in _pack(units, max_tokens, overlap)
         )
     return chunks
@@ -150,14 +158,25 @@ def _chunk_fixed(
     max_tokens: int,
     overlap: int,
     document_type: str | None,
+    document_name: str,
 ) -> list[Chunk]:
     units = [
         _Unit(text=piece, page=None, section_title=None, section_path=[])
         for piece in _split_by_tokens(document.content, max_tokens)
     ]
     return [
-        _make_chunk(document, group, document_type) for group in _pack(units, max_tokens, overlap)
+        _make_chunk(document, group, document_type, document_name)
+        for group in _pack(units, max_tokens, overlap)
     ]
+
+
+def _document_name(document: Document) -> str:
+    """Kurzer Name des Dokuments, damit Fundstellen lesbar bleiben."""
+    if document.source:
+        name = PurePosixPath(document.source.replace("\\", "/")).name
+        if name and not name.startswith("<"):
+            return name
+    return document.title or document.id
 
 
 def chunk_document(
@@ -175,13 +194,14 @@ def chunk_document(
     if overlap < 0:
         raise ValueError("overlap darf nicht negativ sein.")
 
+    document_name = _document_name(document)
     if resolved is ChunkStrategy.FIXED:
-        return _chunk_fixed(document, max_tokens, overlap, document_type)
+        return _chunk_fixed(document, max_tokens, overlap, document_type, document_name)
     if not document.sections:
         document = document.model_copy(
             update={"sections": [Section(title=document.title, level=1, content=document.content)]}
         )
-    return _chunk_structural(document, max_tokens, overlap, document_type)
+    return _chunk_structural(document, max_tokens, overlap, document_type, document_name)
 
 
 def chunk_text(

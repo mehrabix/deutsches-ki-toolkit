@@ -1,0 +1,81 @@
+# Kleiner Bewertungssatz über die synthetischen Testdateien.
+#
+# Die erwarteten Fundstellen stehen als "datei#abschnitt". Nur der Dateiname
+# ohne Abschnitt ist ebenfalls erlaubt.
+#
+# Aufruf:
+#   deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixtures
+
+name: deutsch-rag-fixtures
+description: Deutsche Fragen zu Vertrag, Rechnung und Handbuch.
+
+cases:
+  - question: Wie lange ist die Zahlungsfrist?
+    expected_sources: ["vertrag.md#§ 4 Zahlungsbedingungen"]
+    reference_answer: Die Zahlung ist innerhalb von 30 Tagen nach Rechnungsstellung fällig.
+    category: business
+    difficulty: easy
+
+  - question: Was passiert bei verspäteter Zahlung?
+    expected_sources: ["vertrag.md#§ 4 Zahlungsbedingungen"]
+    reference_answer: Es fallen Verzugszinsen in Höhe von neun Prozent über dem Basiszinssatz an.
+    category: business
+    difficulty: easy
+
+  - question: Wie lange ist die Kündigungsfrist?
+    expected_sources: ["vertrag.md#§ 7 Kündigung"]
+    reference_answer: Die Kündigungsfrist beträgt drei Monate zum Monatsende.
+    category: legal
+    difficulty: easy
+
+  - question: Welche Form müssen Kündigungen einhalten?
+    expected_sources: ["vertrag.md#§ 7 Kündigung"]
+    reference_answer: Kündigungen bedürfen der Schriftform.
+    category: legal
+    difficulty: medium
+
+  - question: Wer wird mit der Instandhaltung beauftragt?
+    expected_sources: ["vertrag.md#§ 1 Vertragsgegenstand"]
+    category: business
+    difficulty: easy
+
+  - question: Wie wird der Versicherungsbeitrag abgerechnet?
+    expected_sources: ["vertrag.md#§ 2 Vergütung"]
+    category: finance
+    difficulty: medium
+
+  - question: Wann muss die Arbeitsunfähigkeitsbescheinigung eingehen?
+    expected_sources: ["handbuch.md#Arbeitsunfähigkeitsbescheinigung"]
+    reference_answer: Spätestens am dritten Werktag.
+    category: hr
+    difficulty: medium
+
+  - question: Wie oft erfolgt die Wartung der Anlage?
+    expected_sources: ["handbuch.md#Wartungsintervalle"]
+    reference_answer: Die Wartung erfolgt jährlich.
+    category: technical
+    difficulty: easy
+
+  - question: Wie lange dauert die Lieferung von Ersatzteilen?
+    expected_sources: ["handbuch.md#Ersatzteile"]
+    reference_answer: Die Lieferzeit beträgt in der Regel zwei Wochen.
+    category: technical
+    difficulty: easy
+
+  - question: Wie lautet die Rechnungsnummer?
+    expected_sources: ["rechnung.txt"]
+    reference_answer: RE-2024-001
+    category: finance
+    difficulty: easy
+
+  - question: Auf welches Konto soll gezahlt werden?
+    expected_sources: ["rechnung.txt"]
+    reference_answer: Auf das Konto mit der IBAN DE89 3704 0044 0532 0130 00.
+    category: finance
+    difficulty: easy
+
+  - question: Wie hoch ist der Nettobetrag?
+    expected_sources: ["rechnung.txt"]
+    reference_answer: 1.250,00 EUR
+    category: finance
+    difficulty: easy

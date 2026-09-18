@@ -20,6 +20,7 @@ __all__ = [
     "RerankingConfig",
     "RetrievalConfig",
     "Settings",
+    "StorageConfig",
 ]
 
 CONFIG_FILENAME = "deutsches-ki.yaml"
@@ -84,6 +85,13 @@ class LlmConfig(_Section):
     api_key: str | None = None
 
 
+class StorageConfig(_Section):
+    """Wo Chunks dauerhaft liegen."""
+
+    provider: str | None = None
+    dsn: str | None = None
+
+
 class Settings(_Section):
     """Gesamte Konfiguration mit sinnvollen Vorgaben."""
 
@@ -96,6 +104,7 @@ class Settings(_Section):
     retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
     reranking: RerankingConfig = Field(default_factory=RerankingConfig)
     llm: LlmConfig = Field(default_factory=LlmConfig)
+    storage: StorageConfig = Field(default_factory=StorageConfig)
 
     @classmethod
     def load(cls, path: str | Path | None = None, **overrides: Any) -> Settings:
