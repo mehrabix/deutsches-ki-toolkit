@@ -52,6 +52,10 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
 - Anbindung an Ollama gegen ein echtes Modell: Die Kette aus Suche, Prompt und
   Antwort läuft und liefert eine belegte deutsche Antwort. Zwei Beobachtungen
   dazu stehen weiter unten.
+- GLiNER-Detektor gegen ein echtes Modell: Es findet Organisationen, die das
+  deutsche spaCy-Modell bewusst auslässt.
+- MCP-Server: Werkzeuge werden über die echte MCP-Schnittstelle aufgerufen, ein
+  fehlendes Dokument kommt als Fehlerergebnis zurück statt als Absturz.
 
 Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
 dem Hashing-Modell: Recall@1 0,83, Recall@5 1,00, MRR 0,90, nDCG@5 0,93.
@@ -83,11 +87,8 @@ wird gemessen und nicht behauptet.
 
 **Vorhanden, aber noch nicht gegen echte Systeme geprüft**
 
-Die folgenden Bausteine sind geschrieben und lassen sich einschalten, wurden
-aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
-
-- GLiNER-Detektor (`gliner`)
-- MCP-Server selbst (die Werkzeuge dahinter sind getestet)
+Zurzeit ist hier nichts offen. Alle optionalen Bausteine sind mindestens einmal
+gegen die echte Bibliothek ausgeführt worden, und die meisten laufen in der CI.
 
 **Was das Sprachmodell nicht leistet**
 

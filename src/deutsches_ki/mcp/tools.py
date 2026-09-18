@@ -6,6 +6,7 @@ installierte Erweiterung prüfen, und der Server ist nur eine dünne Hülle.
 
 from __future__ import annotations
 
+import functools
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -26,7 +27,7 @@ from deutsches_ki.text import (
     split_sentences,
 )
 
-__all__ = ["ToolSpec", "call_tool", "list_tools"]
+__all__ = ["ToolSpec", "call_tool", "guard", "list_tools"]
 
 _SUFFIXES = {".txt", ".text", ".log", ".md", ".markdown"}
 
@@ -217,14 +218,30 @@ def list_tools() -> list[ToolSpec]:
     return list(_TOOLS)
 
 
+def guard(handler: Callable[..., dict[str, Any]]) -> Callable[..., dict[str, Any]]:
+    """Fängt bekannte Fehler ab und gibt sie als Ergebnis zurück.
+
+    Ein fehlendes Dokument soll den Server nicht abbrechen, sondern als Antwort
+    mit ``error`` zurückkommen. Die Hülle liegt bewusst um den Handler selbst:
+    Der MCP-Server ruft ihn direkt auf und käme an einer Prüfung in
+    ``call_tool`` gar nicht vorbei.
+    """
+
+    @functools.wraps(handler)
+    def wrapper(**arguments: Any) -> dict[str, Any]:
+        try:
+            return handler(**arguments)
+        except DeutschesKiError as error:
+            return {"error": str(error)}
+
+    return wrapper
+
+
 def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
     """Ruft ein Werkzeug beim Namen auf."""
     for spec in _TOOLS:
         if spec.name == name:
-            try:
-                return spec.handler(**arguments)
-            except DeutschesKiError as error:
-                return {"error": str(error)}
+            return guard(spec.handler)(**arguments)
     raise KeyError(f"Unbekanntes Werkzeug: {name}")
 
 

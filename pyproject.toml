@@ -49,6 +49,11 @@ presidio = [
 ]
 gliner = [
     "gliner>=0.2",
+    # Beide fehlen in Gliners eigenen Abhängigkeiten. Ohne tiktoken scheitert
+    # das Laden des Tokenizers, ohne protobuf das Lesen des SentencePiece-Modells
+    # (die Fehlermeldung nennt dann irreführend eine Zeile in spm.model).
+    "tiktoken>=0.7",
+    "protobuf>=5.0",
 ]
 docling = [
     "docling>=2.0",
@@ -61,7 +66,7 @@ postgres = [
     "pgvector>=0.3",
 ]
 mcp = [
-    "mcp>=1.0",
+    "mcp>=2.0",
 ]
 all = [
     "deutsches-ki-toolkit[nlp,presidio,gliner,docling,embeddings,postgres,mcp]",

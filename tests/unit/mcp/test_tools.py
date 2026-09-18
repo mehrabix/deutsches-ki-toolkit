@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 
@@ -111,6 +112,10 @@ def test_unknown_tool_raises() -> None:
         call_tool("gibt_es_nicht", {})
 
 
+@pytest.mark.skipif(
+    importlib.util.find_spec("mcp") is not None,
+    reason="Die Erweiterung 'mcp' ist installiert, der Fehlerpfad greift nicht.",
+)
 def test_server_requires_extra() -> None:
     from deutsches_ki.mcp.server import build_server
 
