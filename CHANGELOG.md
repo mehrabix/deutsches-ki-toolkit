@@ -4,6 +4,36 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.1a1]
+
+Fünfte Vorabversion. Sie behebt ein Leck in der Anonymisierung, das in der
+Vorabversion davor steckte.
+
+### Behoben
+
+- **Die Anonymisierung wirkte nur an der Oberfläche.** `anonymize()` ersetzte
+  den Text des Dokuments, ließ aber den Abschnittsbaum stehen. Der Chunker
+  liest den Baum und nicht den Text, also trugen alle Chunks weiter die
+  Originaldaten – und damit jede Fundstelle und jede RAG-Antwort, obwohl die
+  Anonymisierung gemeldet hatte, dass sie gelaufen ist. Der Baum wird jetzt aus
+  dem bereinigten Text neu gebaut.
+- **Keine Gliederung bei eingefügtem Text.** Ein per `from_text` übergebenes
+  Dokument hatte keinen Abschnittsbaum; das strukturelle Chunking fiel auf
+  einen einzigen Block zurück.
+- **Namenskonflikt im Demo-Ordner.** Der Ordner hieß `spaces/` und verdeckte
+  beim Import das Modul `spaces` von Hugging-Face-ZeroGPU. Er heißt jetzt
+  `demo/`.
+
+### Hinzugefügt
+
+- Abkürzungserkennung für die Satztrennung (`z. B.`, `d. h.`, `Gem.`, `Abs.`),
+  damit ein Punkt nach einer Abkürzung keinen Satz beendet.
+
+### Geändert
+
+- Die Web-Demo hat einen fünften Schritt: ein kleines Sprachmodell formuliert
+  die Antwort, danach prüft das Toolkit seine Quellenangaben.
+
 ## [0.4.0a1]
 
 Vierte Vorabversion. Der Schwerpunkt lag nicht auf neuen Bausteinen, sondern
