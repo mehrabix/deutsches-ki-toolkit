@@ -1,0 +1,10 @@
+.git
+.venv
+dist
+build
+*.egg-info
+.commandcode
+.pytest_cache
+.ruff_cache
+.mypy_cache
+__pycache__

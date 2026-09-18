@@ -19,6 +19,53 @@ Deutsches Dokument  →  Struktur  →  PII  →  Chunks  →  Embeddings  →  
 
 ---
 
+## Stand
+
+Diese Übersicht sagt, was heute funktioniert. Alles darunter beschreibt das
+Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
+
+**Läuft und ist getestet**
+
+- Deutsche Textnormalisierung, Satzsegmentierung, Komposita-Zerlegung
+- Deutsche PII-Erkennung mit Prüfsummen, fünf Anonymisierungsarten
+- Strukturbasiertes Chunking mit Abschnitts- und Seitenangaben
+- Suche im Arbeitsspeicher: Vektor und lexikalisch, vereint per RRF
+- PostgreSQL mit pgvector, deutsche Volltextsuche ohne `unaccent-Trick`
+  (gegen echtes PostgreSQL geprüft, auch in der CI)
+- Lexikalisches Reranking, RAG-Engine mit Prüfung der Quellenangaben
+- Prompt-Injection- und Geheimniserkennung
+- Bewertung mit Recall, MRR und nDCG samt Datensatz
+- Kommandozeile, MCP-Werkzeuge, Docker-Image
+
+Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
+dem Hashing-Modell: Recall@1 0,75, Recall@5 1,00, MRR 0,84, nDCG@5 0,88.
+Nachvollziehbar mit:
+
+```bash
+deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixtures
+```
+
+**Vorhanden, aber noch nicht gegen echte Systeme geprüft**
+
+Die folgenden Bausteine sind geschrieben und lassen sich einschalten, wurden
+aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
+
+- spaCy-, Presidio- und GLiNER-Detektoren (`nlp`, `presidio`, `gliner`)
+- Docling für PDF und DOCX (`docling`)
+- BGE-M3 und Cross-Encoder-Reranker (`embeddings`)
+- Ollama- und vLLM-Anbindung, bisher nur gegen Attrappen getestet
+- MCP-Server selbst (die Werkzeuge dahinter sind getestet)
+
+**Noch nicht gebaut**
+
+- Bewertung der Antwortqualität (Treue, Relevanz) über ein Sprachmodell
+- Dokumentklassifikation, Terminologie- und Stilprüfung
+- Domänen-Pakete und Enterprise-Datenbankanbindung
+- Web-Demo und Benchmark-Website
+- Feintuning
+
+---
+
 ## Warum es dieses Projekt gibt
 
 Wer schon einmal eine RAG-Anwendung über deutsche Unternehmensdokumente gebaut hat, kennt
@@ -927,24 +974,26 @@ deutsches-ki-toolkit/
 ## Kommandozeile
 
 ```bash
-deutsches-ki parse vertrag.pdf
-deutsches-ki pii vertrag.pdf
-deutsches-ki anonymize vertrag.pdf --mode pseudonymize
-deutsches-ki chunk vertrag.pdf --strategy structural
+deutsches-ki parse vertrag.md
+deutsches-ki pii rechnung.txt --json
+deutsches-ki scan vertrag.md
+deutsches-ki anonymize rechnung.txt --mode pseudonymize -o sauber.txt
+deutsches-ki chunk vertrag.md --strategy structural --max-tokens 512
 deutsches-ki embed ./dokumente --model bge-m3
-deutsches-ki search "Wie lange ist die Kündigungsfrist?"
-deutsches-ki evaluate benchmark.json
+deutsches-ki search ./dokumente "Wie lange ist die Kündigungsfrist?"
+deutsches-ki ask "Welche Zahlungsbedingungen gelten?" --corpus ./dokumente
+deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus ./dokumente
 ```
 
 Ein typischer Durchlauf über einen ganzen Ordner:
 
 ```bash
-deutsches-ki ingest ./dokumente \
-  --language de \
-  --pii anonymize \
-  --embeddings bge-m3 \
-  --store pgvector
+deutsches-ki ingest ./dokumente --dsn postgresql://localhost/deutsche_ki
 ```
+
+Danach beantwortet `ask` Fragen mit Quellenangabe. Ist in `deutsches-ki.yaml`
+ein Sprachmodell eingetragen, wird die Antwort formuliert und die genannten
+Quellen werden geprüft; ohne Eintrag kommt der bestpassende Abschnitt zurück.
 
 Danach:
 
@@ -980,7 +1029,6 @@ pii:
 
 embeddings:
   provider: bge-m3
-  device: auto
 
 retrieval:
   vector: true
@@ -990,6 +1038,7 @@ retrieval:
 
 reranking:
   enabled: true
+  provider: lexical
   top_k: 5
 
 llm:
@@ -999,26 +1048,41 @@ llm:
 storage:
   provider: pgvector
   dsn: postgresql://localhost/deutsche_ki
-
-security:
-  prompt_injection: true
-  citation_check: true
 ```
 
-Umgebungsvariablen und ein Aufrufparameter überschreiben die Datei. Praktisch für
-Container: die Datei bleibt im Repository, Geheimnisse kommen aus der Umgebung.
+Ein Aufrufparameter schlägt die Datei, die Datei schlägt die Vorgabe. Fehlt die
+Datei, gelten die Vorgaben. Für Container empfiehlt es sich, die Datei im
+Repository zu lassen und Zugangsdaten beim Start zu übergeben.
 
 ---
 
 ## Docker
 
 ```bash
-docker compose up
+docker compose -f docker/compose.yaml up -d postgres
 ```
 
-Gestartet werden PostgreSQL mit pgvector, Ollama und das Toolkit. Standardmäßig läuft
-alles auf der CPU; ein GPU-Profil lässt sich zuschalten, muss aber nicht. Auf einem
-Laptop mit 16 GB Arbeitsspeicher ist die Kette lauffähig, nur langsamer.
+Gestartet wird PostgreSQL mit pgvector. Ollama kommt über ein Profil dazu, damit
+niemand eine Grafikkarte braucht:
+
+```bash
+docker compose -f docker/compose.yaml --profile local-llm up -d
+```
+
+Das Toolkit selbst lässt sich ebenfalls als Image bauen:
+
+```bash
+docker build -f docker/Dockerfile -t deutsches-ki-toolkit .
+docker run --rm -v "$PWD/datasets/fixtures:/daten:ro" deutsches-ki-toolkit pii /daten/rechnung.txt
+```
+
+Läuft Docker Hub im eigenen Netz nicht, lassen sich beide Images über eine
+andere Registry bauen; die Basis ist jeweils ein `--build-arg`:
+
+```bash
+docker build -f docker/postgres/Dockerfile -t deutsches-ki-postgres:17 docker/postgres
+POSTGRES_IMAGE=deutsches-ki-postgres:17 docker compose -f docker/compose.yaml up -d postgres
+```
 
 ---
 
