@@ -55,6 +55,12 @@ def test_flags_repeated_word() -> None:
     assert "wortwiederholung" in _rules("Die die Zahlung ist fällig.")
 
 
+def test_repetition_across_lines_is_not_flagged() -> None:
+    """Eine Überschrift, die den Absatz eröffnet, ist keine Wiederholung."""
+    text = "## Ersatzteile\n\nErsatzteile werden bestellt."
+    assert "wortwiederholung" not in _rules(text)
+
+
 def test_flags_very_long_word() -> None:
     assert "langes_wort" in _rules("Arbeitsunfähigkeitsbescheinigungspflichtigkeit")
 

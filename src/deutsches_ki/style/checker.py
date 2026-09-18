@@ -55,7 +55,9 @@ _FILLERS = re.compile(
     re.IGNORECASE,
 )
 
-_REPEATED_WORD = re.compile(r"\b(\w{3,})\s+\1\b", re.IGNORECASE)
+# Nur innerhalb einer Zeile: Eine Überschrift, die als erstes Wort des Absatzes
+# wieder auftaucht, ist keine Wortwiederholung.
+_REPEATED_WORD = re.compile(r"\b(\w{3,})[ \t]+\1\b", re.IGNORECASE)
 
 _LONG_WORD = re.compile(r"\b[\wÄÖÜäöüß-]{" + str(_LONG_WORD_CHARS) + r",}\b")
 
