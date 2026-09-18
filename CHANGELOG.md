@@ -4,6 +4,53 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.2.0a1]
+
+Zweite Vorabversion. Aus der Bibliothek ist eine Kette geworden: speichern,
+suchen, neu sortieren, antworten, messen.
+
+### Hinzugefügt
+
+- **PostgreSQL mit pgvector**: Schema, HNSW-Index, Aufnahme von Dokumenten und
+  Chunks, hybride Suche. Geprüft gegen echtes PostgreSQL, auch in der CI.
+- **Deutsche Volltextsuche** über eine in Python gefaltete Suchspalte. Damit
+  findet „Schnösel“ auch „Schnoesel“, ohne an den `unaccent`-Regeln des Servers
+  zu drehen, und Komposita-Bestandteile werden mitindiziert.
+- **Reranking**: lexikalischer Reranker ohne Modell, Cross-Encoder als
+  optionale Erweiterung.
+- **Sprachmodelle**: Anbindung an Ollama und an OpenAI-kompatible Schnittstellen
+  wie vLLM, ohne zusätzliche Abhängigkeit in der Grundinstallation.
+- **RAG-Engine** mit nummerierten Quellen und Prüfung der Quellenangaben:
+  erfundene Verweise wie `[9]` werden gemeldet statt durchgereicht.
+- **Bewertung**: Recall@1/5/10, Precision, MRR, nDCG, Trefferquote, dazu ein
+  Datensatzformat, ein Bewertungslauf und der Befehl `deutsches-ki evaluate`.
+- **Sicherheit**: Erkennung von Prompt-Injection auf Deutsch und Englisch,
+  Erkennung von Geheimnissen mit Maskierung, Kennzeichnung von Dokumentinhalt
+  als fremder Inhalt im Prompt.
+- **MCP-Werkzeuge**: Dokumente einlesen, PII finden, anonymisieren, prüfen,
+  suchen und bewerten, dazu der Server als dünne Hülle.
+- **Docker**: Image für das Toolkit und Compose-Datei mit PostgreSQL und
+  optional Ollama. Beide Images gebaut und ausgeführt.
+- **Kommandozeile**: `scan`, `evaluate`, `ask` und ein echtes `ingest`.
+- Bessere Fundstellen: Chunks tragen den Dateinamen, Abschnitt und Seitenzahl.
+
+### Geändert
+
+- Antworten laufen über die RAG-Engine, damit es nur einen Weg gibt.
+- Fehler in der Suchreihenfolge behoben: Bei gleicher Punktzahl entschied die
+  zufällige Chunk-Kennung, welcher Treffer zuerst kam. Jetzt entscheidet die
+  Reihenfolge im Index, und Ergebnisse sind reproduzierbar.
+- Komposita-Zerlegung vergleicht über die gefaltete Form. Vorher wurde
+  „Kündigungsfrist“ nach dem Auflösen der Umlaute nicht mehr zerlegt.
+- Abschnittstitel werden mitindiziert. Vorher fand eine Frage nach der
+  „Zahlungsfrist“ den Abschnitt „§ 4 Zahlungsbedingungen“ nicht.
+
+### Geprüft
+
+- spaCy- und Presidio-Detektoren gegen ein echtes deutsches Modell, mit CI-Lauf.
+  Dabei bestätigt sich: Presidio findet eine deutsche Steuernummer und eine
+  Handelsregisternummer nicht, die eigenen Muster schon.
+
 ## [0.1.0a1]
 
 Erste Vorabversion. Noch nicht vollständig, aber in sich lauffähig.
