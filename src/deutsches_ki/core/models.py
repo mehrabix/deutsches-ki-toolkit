@@ -101,12 +101,21 @@ class Document(_Model):
         language: Language = Language.DE,
         **metadata: Any,
     ) -> Document:
-        """Baut ein Dokument aus reinem Text ohne Datei."""
+        """Baut ein Dokument aus reinem Text ohne Datei.
+
+        Überschriften werden auch hier erkannt, damit eingefügter Text seine
+        Gliederung behält. Ohne das fiele das strukturelle Chunking auf einen
+        einzigen Block zurück.
+        """
+        from deutsches_ki.documents.headings import build_sections
+
+        sections = build_sections(text)
         return cls(
             source=source,
-            title=title,
+            title=title or next((part.title for part in sections if part.title), None),
             language=language,
             content=text,
+            sections=sections,
             metadata=dict(metadata),
         )
 

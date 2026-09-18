@@ -35,6 +35,19 @@ def test_legal_abbreviations_are_not_split() -> None:
     assert len(_texts(text)) == 2
 
 
+def test_business_abbreviations_are_not_split() -> None:
+    text = "Gem. Abs. 2 Nr. 4 gilt die Regelung sinngemäß. Danach folgt § 5."
+    assert _texts(text) == [
+        "Gem. Abs. 2 Nr. 4 gilt die Regelung sinngemäß.",
+        "Danach folgt § 5.",
+    ]
+
+
+def test_multi_part_business_abbreviations_are_not_split() -> None:
+    text = "Die Frist i. H. v. 30 Tagen gilt i. d. R. nicht. Sie gilt i. V. m. § 4."
+    assert len(_texts(text)) == 2
+
+
 def test_decimal_number_is_not_split() -> None:
     assert _texts("Der Preis beträgt 3.500 Euro. Danach steigt er.") == [
         "Der Preis beträgt 3.500 Euro.",

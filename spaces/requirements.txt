@@ -1,0 +1,2 @@
+gradio>=5.0
+deutsches-ki-toolkit @ git+https://github.com/mehrabix/deutsches-ki-toolkit@main

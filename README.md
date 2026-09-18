@@ -1141,6 +1141,24 @@ POSTGRES_IMAGE=deutsches-ki-postgres:17 docker compose -f docker/compose.yaml up
 
 ---
 
+## Web-Demo
+
+Unter `spaces/` liegt eine Demo mit vier Schritten: zerlegen, sensible Daten
+finden, suchen, beantworten. Jeder Schritt stellt die deutsche Behandlung einer
+naiven gegenüber, damit der Unterschied sichtbar wird statt behauptet. Lokal
+startet sie so:
+
+```bash
+uv sync --extra demo
+uv run python spaces/app.py
+```
+
+Die Demo braucht außer Gradio nichts. Für PDF-Upload kommt `docling` dazu, für
+größere Modelle `embeddings`. Alles läuft auf dem eigenen Rechner; es wird
+nichts gespeichert und nichts nach außen gegeben.
+
+---
+
 ## Häufige Fragen
 
 **Warum nicht einfach LangChain oder LlamaIndex?**

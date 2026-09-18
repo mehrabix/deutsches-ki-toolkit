@@ -14,6 +14,7 @@ from deutsches_ki.chunking import chunk_document
 from deutsches_ki.config import Settings
 from deutsches_ki.core.enums import AnonymizeMode, ChunkStrategy
 from deutsches_ki.core.models import Answer, Chunk, Document, Entity
+from deutsches_ki.documents.headings import build_sections
 from deutsches_ki.documents.parse import parse
 from deutsches_ki.embeddings import get_embedder
 from deutsches_ki.pii import Pseudonymizer, anonymize, detect
@@ -56,7 +57,12 @@ class GermanDocument:
         settings: Settings | None = None,
         **metadata: Any,
     ) -> GermanDocument:
-        """Baut ein Dokument aus reinem Text."""
+        """Baut ein Dokument aus reinem Text.
+
+        Überschriften werden auch hier erkannt. Sonst verlöre ein eingefügter
+        Vertrag seine Gliederung, und das Chunking fiele auf einen einzigen
+        Block zurück.
+        """
         return cls(Document.from_text(text, title=title, **metadata), settings=settings)
 
     @property
@@ -92,6 +98,10 @@ class GermanDocument:
         """Ersetzt sensible Stellen und schreibt den Text fort.
 
         Die Erkennung läuft automatisch, wenn sie noch nicht gelaufen ist.
+
+        Der Abschnittsbaum wird aus dem neuen Text neu gebaut. Sonst trügen die
+        Abschnitte und damit alle Chunks weiter den Originaltext, und die
+        Ersetzung wäre nur an der Oberfläche wirksam.
         """
         resolved = mode if mode is not None else self.settings.pii.mode
         result = anonymize(
@@ -102,6 +112,7 @@ class GermanDocument:
             session=self._session,
         )
         self.document.content = result.text
+        self.document.sections = build_sections(result.text)
         self._entities = None
         self._chunks = None
         return result.text

@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from deutsches_ki import GermanDocument
+from deutsches_ki.chunking import chunk_text
 from deutsches_ki.core.enums import EntityType
 
 TEXT = (
@@ -14,6 +15,10 @@ TEXT = (
 )
 
 WITH_PII = "Bitte an DE89 3704 0044 0532 0130 00 überweisen."
+
+WITH_HEADING = "## § 1 Kontakt\n\n" + WITH_PII
+
+TWO_SECTIONS = "§ 1 Beginn\n\nInhalt eins.\n\n§ 2 Ende\n\nInhalt zwei."
 
 
 def test_from_text_exposes_text_and_title() -> None:
@@ -84,3 +89,39 @@ def test_anonymize_clears_cached_chunks() -> None:
     document.anonymize()
     second = document.chunk()
     assert first[0].content != second[0].content
+
+
+def test_anonymize_removes_pii_from_chunks() -> None:
+    """Die Ersetzung muss auch in den Abschnitten ankommen, nicht nur im Text."""
+    document = GermanDocument.from_text(WITH_HEADING)
+    document.anonymize("redact")
+
+    assert "DE89" not in document.text
+    chunks = document.chunk()
+    assert chunks
+    assert all("DE89" not in chunk.content for chunk in chunks)
+
+
+def test_anonymize_removes_pii_from_search_results() -> None:
+    document = GermanDocument.from_text(WITH_HEADING)
+    document.anonymize("redact")
+
+    answer = document.search("Überweisung")
+    assert answer.retrieved_chunks
+    assert all("DE89" not in chunk.content for chunk in answer.retrieved_chunks)
+
+
+def test_from_text_keeps_structure() -> None:
+    """Auch eingefügter Text behält seine Gliederung."""
+    document = GermanDocument.from_text(TWO_SECTIONS)
+
+    titles = [section.title for section in document.document.iter_sections()]
+    assert titles == ["§ 1 Beginn", "§ 2 Ende"]
+    assert len(document.chunk()) == 2
+
+
+def test_chunk_text_uses_structure() -> None:
+    """Strukturelles Chunking darf reiner Text nicht zu einem Block werden."""
+    chunks = chunk_text(TWO_SECTIONS)
+
+    assert [chunk.section for chunk in chunks] == ["§ 1 Beginn", "§ 2 Ende"]

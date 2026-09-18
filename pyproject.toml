@@ -66,10 +66,13 @@ postgres = [
     "pgvector>=0.3",
 ]
 mcp = [
-    "mcp>=2.0",
+    "mcp>=1.0",
+]
+demo = [
+    "gradio>=4.0",
 ]
 all = [
-    "deutsches-ki-toolkit[nlp,presidio,gliner,docling,embeddings,postgres,mcp]",
+    "deutsches-ki-toolkit[nlp,presidio,gliner,docling,embeddings,postgres,mcp,demo]",
 ]
 dev = [
     "pytest>=8.0",
