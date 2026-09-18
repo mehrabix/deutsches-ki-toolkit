@@ -22,7 +22,12 @@ import pytest
 from deutsches_ki.core.models import Chunk
 from deutsches_ki.embeddings import get_embedder
 from deutsches_ki.errors import ProviderError
-from deutsches_ki.providers import ChatMessage, OllamaProvider, get_provider
+from deutsches_ki.providers import (
+    ChatMessage,
+    OllamaProvider,
+    OpenAICompatibleProvider,
+    get_provider,
+)
 from deutsches_ki.rag import DeutschRAG
 from deutsches_ki.retrieval import InMemoryRetriever
 
@@ -40,15 +45,27 @@ class _Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length", "0"))
         raw = self.rfile.read(length) if length else b"{}"
         body = json.loads(raw.decode("utf-8"))
-        _Handler.requests.append({"path": self.path, "body": body})
+        _Handler.requests.append(
+            {
+                "path": self.path,
+                "body": body,
+                "authorization": self.headers.get("Authorization"),
+            }
+        )
 
         if self.status != 200:
             payload: dict[str, Any] = {"error": "etwas ging schief"}
-        else:
+        elif self.path == "/api/chat":
             payload = {
                 "model": body.get("model", "unbekannt"),
                 "message": {"role": "assistant", "content": self.answer},
                 "done": True,
+            }
+        else:
+            # OpenAI-kompatibles Format, wie es vLLM liefert.
+            payload = {
+                "model": body.get("model", "unbekannt"),
+                "choices": [{"index": 0, "message": {"role": "assistant", "content": self.answer}}],
             }
 
         data = json.dumps(payload).encode("utf-8")
@@ -146,6 +163,37 @@ def test_unreachable_host_becomes_provider_error() -> None:
 
 def test_get_provider_builds_an_ollama_provider() -> None:
     assert get_provider("ollama", model="x", host="http://127.0.0.1:1").name == "ollama"
+
+
+# --- OpenAI-kompatible Anbindung (vLLM) ------------------------------------
+
+
+def _openai(host: str, *, api_key: str | None = None) -> OpenAICompatibleProvider:
+    return OpenAICompatibleProvider(model="testmodell", base_url=host, api_key=api_key)
+
+
+def test_openai_compatible_uses_chat_completions(ollama_server: str) -> None:
+    _Handler.answer = "Antwort aus vLLM [1]."
+    text = _openai(ollama_server).generate([ChatMessage(role="user", content="Frage?")])
+
+    assert _Handler.requests[0]["path"] == "/chat/completions"
+    assert text == "Antwort aus vLLM [1]."
+
+
+def test_openai_compatible_sends_bearer_token(ollama_server: str) -> None:
+    _openai(ollama_server, api_key="geheim").generate([ChatMessage(role="user", content="F")])
+    assert _Handler.requests[0]["authorization"] == "Bearer geheim"
+
+
+def test_openai_compatible_without_key_sends_no_header(ollama_server: str) -> None:
+    _openai(ollama_server).generate([ChatMessage(role="user", content="F")])
+    assert _Handler.requests[0]["authorization"] is None
+
+
+def test_openai_compatible_reports_http_error(ollama_server: str) -> None:
+    _Handler.status = 503
+    with pytest.raises(ProviderError, match="503"):
+        _openai(ollama_server).generate([ChatMessage(role="user", content="F")])
 
 
 # --- Die ganze Kette mit einem Sprachmodell --------------------------------

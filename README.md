@@ -49,6 +49,9 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
   samt CI-Lauf. Dabei bestätigt sich der Ausgangspunkt des Projekts: Presidio
   findet eine deutsche Steuernummer und eine Handelsregisternummer nicht, die
   eigenen Muster schon.
+- Anbindung an Ollama gegen ein echtes Modell: Die Kette aus Suche, Prompt und
+  Antwort läuft und liefert eine belegte deutsche Antwort. Zwei Beobachtungen
+  dazu stehen weiter unten.
 
 Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
 dem Hashing-Modell: Recall@1 0,83, Recall@5 1,00, MRR 0,90, nDCG@5 0,93.
@@ -84,8 +87,23 @@ Die folgenden Bausteine sind geschrieben und lassen sich einschalten, wurden
 aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
 
 - GLiNER-Detektor (`gliner`)
-- Ollama- und vLLM-Anbindung, bisher nur gegen Attrappen getestet
 - MCP-Server selbst (die Werkzeuge dahinter sind getestet)
+
+**Was das Sprachmodell nicht leistet**
+
+Die Anbindung ist geprüft, das Modell dahinter war das kleinste, das auf einem
+Laptop läuft. Zwei Dinge fielen dabei auf und gehören hierhin:
+
+Ein Modell mit einer Milliarde Parameter hält sich **nicht an die Zitatvorgabe**.
+Es beantwortet die Frage richtig („Die Zahlungsfrist ist nach § 4 des Dokuments
+30 Tage nach Rechnungsstellung“), lässt aber die geforderten Nummern `[1]` weg.
+Die Zitatprüfung meldet das als „keine Quelle genannt“ statt es zu übersehen.
+
+Das Urteil durch ein Sprachmodell ist **schwankend**. Dieselbe Frage, dieselben
+Quellen, dieselbe Antwort, dreimal bewertet: Treue 0,0, dann 0,5, dann 1,0. Genau
+deshalb sind die deterministischen Maße die Grundlage, und das Urteil durch ein
+Modell ist eine freiwillige Zugabe. Ein Modell als Richter ist bequem, aber nicht
+belastbar.
 
 **Noch nicht gebaut**
 
