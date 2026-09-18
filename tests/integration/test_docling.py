@@ -21,11 +21,13 @@ from deutsches_ki.errors import MissingDependencyError
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.optional,
-    # Docling warnt beim Konvertieren über eigene veraltete Felder. Die
-    # Projektkonfiguration macht aus Warnungen Fehler, damit eigene
-    # Verfallswarnungen auffallen; hier werden nur fremde geduldet.
+    # Docling und seine OCR-Abhängigkeit warnen über eigene Altlasten: veraltete
+    # Felder, und beim ersten Übersetzen sogar ungültige Escape-Sequenzen in
+    # ihrem Quelltext. Die Projektkonfiguration macht aus Warnungen Fehler, damit
+    # eigene Verfallswarnungen auffallen; hier werden nur fremde geduldet.
     pytest.mark.filterwarnings("ignore::DeprecationWarning"),
     pytest.mark.filterwarnings("ignore::UserWarning"),
+    pytest.mark.filterwarnings("ignore::SyntaxWarning"),
 ]
 
 pytest.importorskip("docling", reason="Die Erweiterung 'docling' ist nicht installiert.")

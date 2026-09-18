@@ -36,7 +36,9 @@ def parse_with_docling(
         result = DocumentConverter().convert(str(path))
         markdown_text = result.document.export_to_markdown()
     except Exception as exc:  # pragma: no cover - hängt vom Dokument ab
-        raise ParseError(f"Dokument konnte nicht gelesen werden: {path}") from exc
+        # Den ursprünglichen Fehler mitnennen: Ohne ihn ist nicht zu erkennen,
+        # ob das Dokument defekt ist oder eine Abhängigkeit fehlt.
+        raise ParseError(f"Dokument konnte nicht gelesen werden: {path} ({exc})") from exc
 
     return parse_markdown(
         markdown_text,

@@ -1,0 +1,6 @@
+# PDFs sind binär. Ohne diese Regel wandelt Git die Zeilenenden um, und die
+# Byte-Offsets in der xref-Tabelle zeigen danach ins Leere. Unter Windows fiel
+# das nicht auf, unter Linux scheiterte das Einlesen.
+*.pdf binary
+*.png binary
+*.jpg binary
