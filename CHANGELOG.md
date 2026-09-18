@@ -4,7 +4,9 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
-## [Unreleased]
+## [0.1.0a1]
+
+Erste Vorabversion. Noch nicht vollständig, aber in sich lauffähig.
 
 ### Hinzugefügt
 

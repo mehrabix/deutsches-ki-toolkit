@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
-__all__ = ["__version__"]
+from deutsches_ki.facade import GermanDocument
 
-__version__ = "0.1.0"
+__all__ = ["GermanDocument", "__version__"]
+
+__version__ = "0.1.0a1"
