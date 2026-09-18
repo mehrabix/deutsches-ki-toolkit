@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 from pathlib import Path
 
 from typer.testing import CliRunner
@@ -30,6 +31,17 @@ def test_version() -> None:
     result = runner.invoke(app, ["--version"])
     assert result.exit_code == 0
     assert __version__ in result.stdout
+
+
+def test_version_comes_from_the_package() -> None:
+    """Die gemeldete Version muss die der Installation sein.
+
+    Vorher stand sie zusätzlich als Zeichenkette im Quelltext, und beim
+    Veröffentlichen von 0.4.1a1 lief sie auseinander: Die Installation hieß
+    0.4.1a1, die Kommandozeile meldete weiter 0.4.0a1. ``test_version`` fand
+    das nicht, weil es dieselbe Zeichenkette verglich.
+    """
+    assert __version__ == importlib.metadata.version("deutsches-ki-toolkit")
 
 
 def test_parse_command(tmp_path: Path) -> None:

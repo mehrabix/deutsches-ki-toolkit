@@ -872,7 +872,7 @@ wheels = [
 
 [[package]]
 name = "deutsches-ki-toolkit"
-version = "0.4.1a1"
+version = "0.4.1a2"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic" },

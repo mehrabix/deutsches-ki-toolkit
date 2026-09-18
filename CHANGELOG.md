@@ -4,6 +4,21 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.1a2]
+
+Behebt eine falsche Versionsangabe, die in 0.4.1a1 steckte.
+
+### Behoben
+
+- **Die Kommandozeile meldete die falsche Version.** `deutsches-ki --version`
+  gab 0.4.0a1 aus, obwohl 0.4.1a1 installiert war. Die Version stand zusätzlich
+  als Zeichenkette in `deutsches_ki/__init__.py` und wurde beim Veröffentlichen
+  nicht mitgezogen. Sie wird jetzt aus den Paketangaben gelesen, damit es nur
+  eine Stelle gibt, an der sie steht.
+- Der Test, der das hätte finden müssen, verglich die Ausgabe mit derselben
+  Zeichenkette und konnte deshalb nicht anschlagen. Er vergleicht jetzt mit der
+  Version der Installation.
+
 ## [0.4.1a1]
 
 Fünfte Vorabversion. Sie behebt ein Leck in der Anonymisierung, das in der
