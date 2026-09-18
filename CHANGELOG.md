@@ -4,6 +4,57 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [Unreleased]
+
+### Behoben
+
+- **Sätze endeten mitten in Ordnungszahlen.** „Im 1. Quartal 2025 stieg der
+  Umsatz.“ wurde zu „Im 1.“ und „Quartal 2025 stieg der Umsatz.“ Geprüft wurde
+  nur, ob auf die Zahl ein Monatsname, eine weitere Ziffer oder ein
+  kleingeschriebenes Wort folgt. Ein großgeschriebenes Substantiv dahinter ist
+  im Deutschen aber der Normalfall: „2. Auflage“, „3. Stock“, „1. Kapitel“,
+  „1. Vorsitzende“. Ein freistehendes Zahlwort vor einem großgeschriebenen Wort
+  gilt jetzt als Ordnungszahl, solange es höchstens dreistellig ist und kein
+  Trennzeichen davor steht. Vierstellig bleibt eine Jahreszahl und darf einen
+  Satz beenden.
+- **Abkürzungen am Satzende trennten keinen Satz.** Nach Duden, Rechtschreib-
+  regel D 4 ist der Punkt einer Abkürzung am Satzende zugleich der Schlusspunkt
+  des Satzes: „… Zitate von Goethe, Schiller u. a. Ihr Vater ist Regierungsrat
+  a. D.“ Der Code enthielt die dafür vorgesehene Menge
+  `SENTENCE_END_ABBREVIATIONS`, benutzte sie aber nie. „Wir kaufen Äpfel,
+  Birnen usw. Danach gehen wir.“ blieb ein Satz. Ob wirklich ein Satzende
+  vorliegt, entscheidet jetzt der Satzanfang: Auf ein Funktionswort folgt ein
+  neuer Satz, auf ein Inhaltswort geht die Aufzählung weiter („… u. a.
+  Personen“).
+- **Aufzählungen wurden nicht getrennt.** „1. Der erste Punkt. 2. Der zweite
+  Punkt.“ blieb ein Satz, weil eine Ziffer am Satzanfang nicht als Satzanfang
+  erkannt wurde.
+- **Fundstellen ohne eigenen Eintrag.** „Rn.“ (Randnummer) und „Rz.“
+  (Randziffer) fehlten. Nach einer Fundstelle endet der Satz, wenn ein
+  Funktionswort folgt: „Siehe Rn. 45. Die Norm ist einschlägig.“ Bei „Art. 3.
+  Absatz 2 regelt“ geht es dagegen weiter.
+- **Ein Datum mit Leerzeichen zerfiel.** „am 30. 09. 2024“ wurde an jedem
+  Punkt getrennt.
+
+### Geändert
+
+- Die Liste der Abkürzungen wuchs von rund 155 auf 370 Einträge, ergänzt nach
+  dem Wikipedia-Portal „Gebräuchliche Abkürzungen“ (Teil 1, mit Punkt):
+  `Hrsg.`, `Aufl.`, `Abb.`, `Anm.`, `ebd.`, `Ziff.`, `v. Chr.`, `n. Chr.`,
+  `a. a. O.`, `i. J.`, `m. a. W.`, `Pkt.`, `Tab.` und viele weitere. Fehlt eine
+  Abkürzung, zerreißt die Segmentierung einen Satz — das ist der teure Fehler.
+  Steht eine zu viel in der Liste, bleiben zwei Sätze zusammen — das ist der
+  billige. Die Liste ist deshalb bewusst großzügig.
+
+### Bekannte Grenze
+
+- Ein Satz, der mit einer freistehenden Zahl endet, wird weiterhin nicht
+  getrennt: „Die Antwort ist 42. Danach gehen wir.“ bleibt ein Satz. Die Zahl
+  ist von der Ordnungszahl in „das 42. Element“ nicht zu unterscheiden. In
+  deutschen Dokumenten überwiegen Ordnungszahlen und Aufzählungen bei Weitem,
+  und ein zusammengezogener Satz ist der billigere Fehler als ein mitten im
+  Satz zerrissener.
+
 ## [0.5.0]
 
 Erste stabile Fassung. Die fünf Vorabversionen davor waren in der
