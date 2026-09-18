@@ -15,7 +15,9 @@ __all__ = [
     "ChunkingConfig",
     "DocumentsConfig",
     "EmbeddingsConfig",
+    "LlmConfig",
     "PiiConfig",
+    "RerankingConfig",
     "RetrievalConfig",
     "Settings",
 ]
@@ -65,6 +67,23 @@ class RetrievalConfig(_Section):
     top_k: int = Field(default=20, ge=1)
 
 
+class RerankingConfig(_Section):
+    """Wie Treffer neu sortiert werden."""
+
+    enabled: bool = False
+    provider: str = "lexical"
+    top_k: int = Field(default=5, ge=1)
+
+
+class LlmConfig(_Section):
+    """Welches Sprachmodell Antworten formuliert."""
+
+    provider: str | None = None
+    model: str | None = None
+    base_url: str | None = None
+    api_key: str | None = None
+
+
 class Settings(_Section):
     """Gesamte Konfiguration mit sinnvollen Vorgaben."""
 
@@ -75,6 +94,8 @@ class Settings(_Section):
     chunking: ChunkingConfig = Field(default_factory=ChunkingConfig)
     embeddings: EmbeddingsConfig = Field(default_factory=EmbeddingsConfig)
     retrieval: RetrievalConfig = Field(default_factory=RetrievalConfig)
+    reranking: RerankingConfig = Field(default_factory=RerankingConfig)
+    llm: LlmConfig = Field(default_factory=LlmConfig)
 
     @classmethod
     def load(cls, path: str | Path | None = None, **overrides: Any) -> Settings:

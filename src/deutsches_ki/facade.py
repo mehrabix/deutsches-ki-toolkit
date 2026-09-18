@@ -13,15 +13,16 @@ from typing import Any
 from deutsches_ki.chunking import chunk_document
 from deutsches_ki.config import Settings
 from deutsches_ki.core.enums import AnonymizeMode, ChunkStrategy
-from deutsches_ki.core.models import Answer, Chunk, Citation, Document, Entity, SearchResult
+from deutsches_ki.core.models import Answer, Chunk, Document, Entity
 from deutsches_ki.documents.parse import parse
 from deutsches_ki.embeddings import get_embedder
 from deutsches_ki.pii import Pseudonymizer, anonymize, detect
+from deutsches_ki.providers.base import ChatProvider
+from deutsches_ki.rag import DeutschRAG
+from deutsches_ki.reranking import Reranker, get_reranker
 from deutsches_ki.retrieval import InMemoryRetriever
 
 __all__ = ["GermanDocument"]
-
-_BRANCH_CONFIDENCE = {0: 0.5, 1: 0.7, 2: 0.9}
 
 
 class GermanDocument:
@@ -111,6 +112,11 @@ class GermanDocument:
             overlap=overlap if overlap is not None else self.settings.chunking.overlap,
             document_type=self.settings.document_type,
         )
+        # Die Herkunft kommt in die Metadaten, damit später jede Fundstelle den
+        # Dateinamen nennen kann.
+        name = self.document.source or self.document.title or ""
+        for chunk in chunks:
+            chunk.metadata.setdefault("document", name)
         self._chunks = chunks
         return chunks
 
@@ -134,37 +140,35 @@ class GermanDocument:
         retriever.add(chunks)
         return retriever
 
-    def search(self, question: str, *, top_k: int | None = None) -> Answer:
+    def build_reranker(self) -> Reranker | None:
+        """Baut den Reranker, sofern er eingeschaltet ist."""
+        if not self.settings.reranking.enabled:
+            return None
+        return get_reranker(self.settings.reranking.provider)
+
+    def build_rag(self, *, llm: ChatProvider | None = None) -> DeutschRAG:
+        """Baut die RAG-Engine über diesem Dokument."""
+        return DeutschRAG(
+            self.build_retriever(),
+            reranker=self.build_reranker(),
+            llm=llm,
+            candidates=self.settings.retrieval.top_k,
+            top_k=min(self.settings.reranking.top_k, self.settings.retrieval.top_k),
+        )
+
+    def search(
+        self,
+        question: str,
+        *,
+        top_k: int | None = None,
+        llm: ChatProvider | None = None,
+    ) -> Answer:
         """Beantwortet eine Frage aus dem Dokument, mit Quellenangabe.
 
         Ohne Sprachmodell entsteht eine belegte Auswahl: die Antwort ist der
-        bestpassende Abschnitt, dazu die Fundstellen.
+        bestpassende Abschnitt, dazu die Fundstellen. Mit ``llm`` wird daraus
+        eine formulierte Antwort, deren Quellenangaben geprüft werden.
         """
-        retriever = self.build_retriever()
         limit = top_k if top_k is not None else self.settings.retrieval.top_k
-        results = retriever.search(question, top_k=limit)
-        return self._to_answer(results)
-
-    def _to_answer(self, results: list[SearchResult]) -> Answer:
-        citations = [
-            Citation(
-                document=self.document.source or self.document.title or "",
-                page=result.chunk.metadata.get("page"),
-                section=result.chunk.section,
-                chunk_id=result.chunk.id,
-                score=result.score,
-            )
-            for result in results
-        ]
-        if not results:
-            return Answer(answer="", citations=[], retrieved_chunks=[], confidence=0.0)
-
-        top = results[0]
-        matched = sum(1 for rank in (top.vector_rank, top.lexical_rank) if rank is not None)
-        return Answer(
-            answer=top.chunk.content,
-            citations=citations,
-            retrieved_chunks=[result.chunk for result in results],
-            confidence=_BRANCH_CONFIDENCE.get(matched, 0.5),
-            metadata={"question_chunks": len(results)},
-        )
+        rag = self.build_rag(llm=llm)
+        return rag.ask(question, top_k=limit)

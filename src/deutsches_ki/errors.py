@@ -6,6 +6,7 @@ __all__ = [
     "DeutschesKiError",
     "MissingDependencyError",
     "ParseError",
+    "ProviderError",
     "UnsupportedFormatError",
 ]
 
@@ -24,3 +25,7 @@ class ParseError(DeutschesKiError):
 
 class UnsupportedFormatError(DeutschesKiError):
     """Für diese Dateiendung gibt es keinen Leser."""
+
+
+class ProviderError(DeutschesKiError):
+    """Ein Sprachmodell war nicht erreichbar oder hat unerwartet geantwortet."""
