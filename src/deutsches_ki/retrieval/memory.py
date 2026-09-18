@@ -31,6 +31,17 @@ def _cosine(left: Sequence[float], right: Sequence[float]) -> float:
     return dot / (math.sqrt(left_norm) * math.sqrt(right_norm))
 
 
+def _index_text(chunk: Chunk) -> str:
+    """Der Text, der indiziert wird: Abschnittstitel plus Inhalt.
+
+    Deutsche Abschnittstitel tragen das Thema („§ 4 Zahlungsbedingungen“).
+    Ohne den Titel findet eine Frage nach der Zahlungsfrist den Abschnitt
+    nicht, in dem nur von „Zahlung“ die Rede ist.
+    """
+    section = chunk.section
+    return f"{section}\n{chunk.content}" if section else chunk.content
+
+
 class InMemoryRetriever:
     """Hybride Suche über Vektoren und deutsche Volltext-Token."""
 
@@ -72,7 +83,7 @@ class InMemoryRetriever:
             return
         self._chunks.extend(chunks)
 
-        new_tokens = [search_tokens(chunk.content) for chunk in chunks]
+        new_tokens = [search_tokens(_index_text(chunk)) for chunk in chunks]
         self._tokens.extend(new_tokens)
         for tokens in new_tokens:
             for term in set(tokens):
@@ -80,7 +91,7 @@ class InMemoryRetriever:
 
         if self._vector:
             self._vectors.extend(
-                self._embedder.embed_documents([chunk.content for chunk in chunks])
+                self._embedder.embed_documents([_index_text(chunk) for chunk in chunks])
             )
 
         total = sum(len(tokens) for tokens in self._tokens)
@@ -134,10 +145,14 @@ class InMemoryRetriever:
         rankings = [ranking for ranking in (vector_ranking, lexical_ranking) if ranking]
         if not rankings:
             return []
-        fused = reciprocal_rank_fusion(rankings)
-        ordered = sorted(fused.items(), key=lambda pair: (-pair[1], pair[0]))
 
+        # Bei gleicher Punktzahl entscheidet die Reihenfolge im Index, nicht die
+        # zufällig erzeugte Chunk-Kennung. Sonst wäre das Ergebnis von Lauf zu
+        # Lauf verschieden und Benchmarks nicht reproduzierbar.
         position = {chunk.id: index for index, chunk in enumerate(self._chunks)}
+        fused = reciprocal_rank_fusion(rankings)
+        ordered = sorted(fused.items(), key=lambda pair: (-pair[1], position[pair[0]]))
+
         vector_rank = {doc_id: rank for rank, doc_id in enumerate(vector_ranking, start=1)}
         lexical_rank = {doc_id: rank for rank, doc_id in enumerate(lexical_ranking, start=1)}
 

@@ -1,6 +1,8 @@
 """Die Kommandozeile ``deutsches-ki``."""
 
+import contextlib
 import json
+import sys
 from pathlib import Path
 from typing import Annotated
 
@@ -33,6 +35,15 @@ console = Console()
 _SUPPORTED_SUFFIXES = TEXT_SUFFIXES | MARKDOWN_SUFFIXES | DOCLING_SUFFIXES
 
 
+def _ensure_utf8_output() -> None:
+    """Sorgt dafür, dass deutsche Zeichen auch unter Windows korrekt ankommen."""
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if reconfigure is None:  # pragma: no cover - plattformabhängig
+        return
+    with contextlib.suppress(ValueError, OSError):  # pragma: no cover - plattformabhängig
+        reconfigure(encoding="utf-8")
+
+
 @app.callback(invoke_without_command=True)
 def _callback(
     version: Annotated[
@@ -40,6 +51,7 @@ def _callback(
         typer.Option("--version", help="Version anzeigen und beenden.", is_eager=True),
     ] = False,
 ) -> None:
+    _ensure_utf8_output()
     if version:
         console.print(f"deutsches-ki-toolkit {__version__}")
         raise typer.Exit()

@@ -1,0 +1,23 @@
+Rechnung
+
+Rechnungsnummer: RE-2024-001
+Kundennummer: 4711
+Rechnungsdatum: 03.02.2024
+
+Leistung: Beratung und Instandhaltung der Anlagen
+
+Nettobetrag: 1.250,00 EUR
+Umsatzsteuer: 19 Prozent
+
+Zahlbar innerhalb von 30 Tagen auf das Konto
+IBAN DE89 3704 0044 0532 0130 00
+BIC DEUTDEFF
+
+Ansprechpartner: Max Mustermann
+Telefon: 030 12345678
+E-Mail: max.mustermann@example.de
+
+Anschrift:
+Beispiel GmbH
+Beispielstraße 12a
+10115 Berlin
