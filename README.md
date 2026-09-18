@@ -1,5 +1,7 @@
 # deutsches-ki-toolkit
 
+**Deutsch** · [English](README.en.md)
+
 **Deutsche Dokumente. Deutsche Daten. Antworten, auf die man sich verlassen kann.**
 
 `deutsches-ki-toolkit` ist eine Python-Bibliothek für alle, die KI-Anwendungen mit
