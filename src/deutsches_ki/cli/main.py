@@ -12,6 +12,7 @@ from rich.table import Table
 
 from deutsches_ki import __version__
 from deutsches_ki.chunking import chunk_document
+from deutsches_ki.classification import classify_document
 from deutsches_ki.config import Settings
 from deutsches_ki.core.models import Chunk, Document, Entity
 from deutsches_ki.documents.parse import (
@@ -20,6 +21,7 @@ from deutsches_ki.documents.parse import (
     TEXT_SUFFIXES,
     parse,
 )
+from deutsches_ki.domains import available_domains, load_domain
 from deutsches_ki.embeddings import get_embedder
 from deutsches_ki.errors import DeutschesKiError
 from deutsches_ki.evaluation import EvaluationDataset, evaluate_retriever
@@ -30,6 +32,8 @@ from deutsches_ki.reranking import get_reranker
 from deutsches_ki.retrieval import InMemoryRetriever
 from deutsches_ki.security import scan_text
 from deutsches_ki.storage import PgVectorStore
+from deutsches_ki.style import check_style
+from deutsches_ki.terminology import Glossary, check_terminology
 
 app = typer.Typer(
     add_completion=False,
@@ -152,6 +156,116 @@ def pii_cmd(
         console.print("[green]Keine sensiblen Stellen gefunden.[/green]")
         return
     console.print(_entities_table(entities))
+
+
+@app.command("classify")
+def classify_cmd(
+    path: Annotated[Path, typer.Argument(help="Dokument, das eingeordnet wird.")],
+    json_output: Annotated[bool, typer.Option("--json", help="Ausgabe als JSON.")] = False,
+) -> None:
+    """Erkennt die Art eines Dokuments."""
+    document = _load(path)
+    result = classify_document(document.content)
+
+    if json_output:
+        console.print_json(result.model_dump_json())
+        return
+
+    console.print(f"[bold]{result.document_type.value}[/bold] ({result.confidence:.0%})")
+    if result.evidence:
+        console.print("\nAusschlaggebend:")
+        for cue in result.evidence:
+            console.print(f"  – {cue}")
+    if result.scores:
+        table = Table(title="Bewertung je Art")
+        table.add_column("Art")
+        table.add_column("Punkte", justify="right")
+        for kind, score in sorted(result.scores.items(), key=lambda item: -item[1]):
+            table.add_row(kind, f"{score:.1f}")
+        console.print(table)
+
+
+@app.command("terminology")
+def terminology_cmd(
+    path: Annotated[Path, typer.Argument(help="Dokument, das geprüft wird.")],
+    glossary: Annotated[
+        Path | None, typer.Option("--glossary", help="Eigenes Glossar als YAML.")
+    ] = None,
+    domain: Annotated[
+        str | None, typer.Option("--domain", help="Mitgeliefertes Fachpaket.")
+    ] = None,
+    json_output: Annotated[bool, typer.Option("--json", help="Ausgabe als JSON.")] = False,
+) -> None:
+    """Prüft, ob Begriffe einheitlich verwendet werden."""
+    document = _load(path)
+
+    if glossary is not None:
+        try:
+            lexicon = Glossary.from_file(glossary)
+        except DeutschesKiError as error:
+            console.print(f"[red]{error}[/red]")
+            raise typer.Exit(code=1) from error
+    elif domain is not None:
+        try:
+            lexicon = load_domain(domain).glossary
+        except DeutschesKiError as error:
+            console.print(f"[red]{error}[/red]")
+            raise typer.Exit(code=1) from error
+    else:
+        console.print(
+            "[yellow]Kein Glossar angegeben. Nutze --glossary oder --domain. "
+            f"Verfügbare Fachpakete: {', '.join(available_domains())}.[/yellow]"
+        )
+        raise typer.Exit(code=1)
+
+    report = check_terminology(document.content, lexicon)
+    if json_output:
+        console.print_json(report.model_dump_json())
+        return
+    if report.is_consistent:
+        console.print("[green]Begriffe werden einheitlich verwendet.[/green]")
+        return
+
+    table = Table(title="Uneinheitliche Begriffe")
+    table.add_column("Bevorzugt")
+    table.add_column("Vorkommende Formen")
+    table.add_column("Anzahl", justify="right")
+    for item in report.inconsistencies:
+        table.add_row(item.preferred, ", ".join(item.surfaces), str(item.count))
+    console.print(table)
+
+
+@app.command("style")
+def style_cmd(
+    path: Annotated[Path, typer.Argument(help="Dokument, das geprüft wird.")],
+    json_output: Annotated[bool, typer.Option("--json", help="Ausgabe als JSON.")] = False,
+) -> None:
+    """Prüft deutschen Stil: lange Sätze, Passiv, Anglizismen und mehr."""
+    document = _load(path)
+    report = check_style(document.content)
+
+    if json_output:
+        console.print_json(report.model_dump_json())
+        return
+
+    console.print(
+        f"{report.sentences} Sätze, {report.words} Wörter, "
+        f"im Schnitt {report.average_sentence_words:.1f} Wörter je Satz."
+    )
+    if report.is_clean:
+        console.print("[green]Keine Auffälligkeiten gefunden.[/green]")
+        return
+
+    table = Table(title="Stilhinweise")
+    table.add_column("Regel")
+    table.add_column("Einstufung")
+    table.add_column("Fund")
+    for finding in report.findings:
+        table.add_row(finding.rule, finding.severity, finding.text[:60])
+    console.print(table)
+    console.print(
+        "\n[dim]Hinweise, kein Korrektorat. Jeder Fund lässt sich im Einzelfall ablehnen.[/dim]"
+    )
 
 
 @app.command("scan")

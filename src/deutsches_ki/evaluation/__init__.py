@@ -2,6 +2,14 @@
 
 from __future__ import annotations
 
+from deutsches_ki.evaluation.answer_quality import (
+    JUDGE_PROMPT,
+    JudgeResult,
+    answer_relevance,
+    citation_coverage,
+    groundedness,
+    judge_answer,
+)
 from deutsches_ki.evaluation.dataset import (
     EvaluationCase,
     EvaluationDataset,
@@ -27,15 +35,21 @@ from deutsches_ki.evaluation.runner import (
 
 __all__ = [
     "DEFAULT_KS",
+    "JUDGE_PROMPT",
     "EvaluationCase",
     "EvaluationDataset",
     "EvaluationReport",
+    "JudgeResult",
+    "answer_relevance",
     "canonical_source",
     "chunk_identity",
+    "citation_coverage",
     "dcg",
     "evaluate_rag",
     "evaluate_retriever",
+    "groundedness",
     "hit_rate_at_k",
+    "judge_answer",
     "matches_source",
     "mean",
     "ndcg_at_k",

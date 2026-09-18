@@ -25,19 +25,23 @@ from deutsches_ki.text.normalize import (
 )
 from deutsches_ki.text.query import default_glossary, expand_query
 from deutsches_ki.text.segment import split_sentences, tokenize_words
+from deutsches_ki.text.stopwords import STOPWORDS, content_terms, is_stopword
 from deutsches_ki.text.tokens import search_tokens
 
 __all__ = [
     "ABBREVIATIONS",
+    "STOPWORDS",
     "CompoundAnalysis",
     "NormalizeMode",
     "analyze_compound",
+    "content_terms",
     "decompound_for_search",
     "default_glossary",
     "expand_query",
     "get_dictionary",
     "is_abbreviation",
     "is_known_word",
+    "is_stopword",
     "normalize_case",
     "normalize_dashes",
     "normalize_ergaenzung",

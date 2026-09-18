@@ -12,6 +12,11 @@ from collections.abc import Sequence
 from pydantic import BaseModel, ConfigDict, Field
 
 from deutsches_ki.core.models import Chunk
+from deutsches_ki.evaluation.answer_quality import (
+    answer_relevance,
+    citation_coverage,
+    groundedness,
+)
 from deutsches_ki.evaluation.dataset import (
     EvaluationDataset,
     canonical_source,
@@ -49,6 +54,9 @@ class EvaluationReport(BaseModel):
     mrr: float = 0.0
     citation_validity: float = 1.0
     answer_presence: float = 0.0
+    groundedness: float = 0.0
+    citation_coverage: float = 0.0
+    answer_relevance: float = 0.0
     unanswered: list[str] = Field(default_factory=list)
 
 
@@ -64,6 +72,9 @@ class _Accumulator:
         self.mrr: list[float] = []
         self.citation_validity: list[float] = []
         self.answer_presence: list[float] = []
+        self.groundedness: list[float] = []
+        self.citation_coverage: list[float] = []
+        self.answer_relevance: list[float] = []
         self.unanswered: list[str] = []
 
     def add(self, retrieved: Sequence[str], expected: list[str]) -> None:
@@ -87,6 +98,9 @@ class _Accumulator:
             mrr=mean(self.mrr),
             citation_validity=mean(self.citation_validity) if self.citation_validity else 1.0,
             answer_presence=mean(self.answer_presence),
+            groundedness=mean(self.groundedness),
+            citation_coverage=mean(self.citation_coverage),
+            answer_relevance=mean(self.answer_relevance),
             unanswered=self.unanswered,
         )
 
@@ -141,6 +155,12 @@ def evaluate_rag(
             accumulator.unanswered.append(case.question)
 
         accumulator.answer_presence.append(1.0 if answer.answer.strip() else 0.0)
+
+        contexts = [chunk.content for chunk in answer.retrieved_chunks]
+        accumulator.groundedness.append(groundedness(answer.answer, contexts))
+        accumulator.citation_coverage.append(citation_coverage(answer.answer))
+        accumulator.answer_relevance.append(answer_relevance(case.question, answer.answer))
+
         if llm is not None:
             report = answer.metadata.get("citations") or {}
             unknown = report.get("unknown") if isinstance(report, dict) else None
