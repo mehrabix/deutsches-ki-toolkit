@@ -198,8 +198,10 @@ lösbar – aber niemand will ihn zehnmal lösen.
 
 - **Normalisierung** für Umlaute, ß, Anführungszeichen, Gedankenstriche und
   Ergänzungsstriche – getrennt für Anzeige und Suche, ohne den Originaltext zu zerstören
-- **Satz- und Wortsegmentierung**, die Abkürzungen wie `z. B.`, `Dr.`, `Dipl.-Ing.`,
-  `GmbH`, `e.V.`, `Nr.`, `Art.`, `Abs.` und `§` kennt
+- **Satz- und Wortsegmentierung**, die deutsche Abkürzungen kennt (`z. B.`,
+  `Dr.`, `Dipl.-Ing.`, `Nr.`, `Abs.`), dazu Ordnungszahlen („im 1. Quartal“,
+  „die 2. Auflage“) und Abkürzungen, die einen Satz beenden dürfen („usw.“,
+  „u. a.“, nach Duden D 4)
 - **Entitätenerkennung** über mehrere Detektoren gleichzeitig (spaCy, Presidio, Regex,
   GLiNER, Transformer)
 - **Deutsche PII** mit Prüfsummen: IBAN, BIC, USt-IdNr., Steuer-ID, Steuernummer,

@@ -38,7 +38,7 @@ die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
 ### Geändert
 
-- Die Liste der Abkürzungen wuchs von rund 155 auf 370 Einträge, ergänzt nach
+- Die Liste der Abkürzungen wuchs von 128 auf 370 Einträge, ergänzt nach
   dem Wikipedia-Portal „Gebräuchliche Abkürzungen“ (Teil 1, mit Punkt):
   `Hrsg.`, `Aufl.`, `Abb.`, `Anm.`, `ebd.`, `Ziff.`, `v. Chr.`, `n. Chr.`,
   `a. a. O.`, `i. J.`, `m. a. W.`, `Pkt.`, `Tab.` und viele weitere. Fehlt eine

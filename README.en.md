@@ -189,8 +189,10 @@ nobody wants to solve it ten times.
 
 - **Normalization** for umlauts, ß, quotation marks, dashes and suspended hyphens —
   separate paths for display and search, without destroying the original text
-- **Sentence and word segmentation** that knows abbreviations such as `z. B.`, `Dr.`,
-  `Dipl.-Ing.`, `GmbH`, `e.V.`, `Nr.`, `Art.`, `Abs.` and `§`
+- **Sentence and word segmentation** that knows German abbreviations (`z. B.`,
+  `Dr.`, `Dipl.-Ing.`, `Nr.`, `Abs.`), plus ordinals ("im 1. Quartal", "die 2.
+  Auflage") and abbreviations that may end a sentence ("usw.", "u. a.", per
+  Duden rule D 4)
 - **Entity recognition** across several detectors at once (spaCy, Presidio, regex, GLiNER,
   transformer)
 - **German PII** with checksums: IBAN, BIC, USt-IdNr., Steuer-ID, Steuernummer, social
