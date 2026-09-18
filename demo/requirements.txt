@@ -1,4 +1,4 @@
 gradio>=5.0
 torch
 transformers>=4.44
-deutsches-ki-toolkit @ git+https://github.com/mehrabix/deutsches-ki-toolkit@main
+deutsches-ki-toolkit>=0.5.1
