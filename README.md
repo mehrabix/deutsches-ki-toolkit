@@ -56,16 +56,24 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
   deutsche spaCy-Modell bewusst auslässt.
 - MCP-Server: Werkzeuge werden über die echte MCP-Schnittstelle aufgerufen, ein
   fehlendes Dokument kommt als Fehlerergebnis zurück statt als Absturz.
-- Web-Demo mit vier Schritten. Jeder Schritt stellt die deutsche Behandlung einer
+- Web-Demo mit fünf Schritten. Jeder Schritt stellt die deutsche Behandlung einer
   naiven gegenüber, damit der Unterschied sichtbar wird statt behauptet.
 
 Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
-dem Hashing-Modell: Recall@1 0,83, Recall@5 1,00, MRR 0,90, nDCG@5 0,93.
+dem Hashing-Modell: Recall@1 0,92, Recall@5 1,00, MRR 0,94, nDCG@5 0,96.
 Nachvollziehbar mit:
 
 ```bash
 deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixtures
 ```
+
+Die Zahlen hängen am Bestand, und das ist keine Nebenbemerkung. Liegt die
+Testdatei zusätzlich in einem zweiten Format vor, liest der Lauf sie mit, und
+derselbe Befehl liefert Recall@1 0,58 statt 0,92. Der beste Treffer ist dann
+`vertrag.pdf#§ 4 Zahlungsbedingungen` mit 0,033 vor
+`vertrag.md#§ 4 Zahlungsbedingungen` mit 0,032 – derselbe Abschnitt, nur aus
+der anderen Datei, und der Bewertungssatz erwartet die Markdown-Datei. Wer eine
+Kennzahl nennt, nennt den Bestand dazu.
 
 Vorher waren es Recall@1 0,75 und MRR 0,84. Der Unterschied kommt von den
 groben Wortstämmen in den Such-Token: „Ersatzteilen“ findet jetzt
@@ -79,13 +87,13 @@ deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixt
 
 | Modell  | Dimension | Recall@5 |  MRR | nDCG@5 | ms je Frage |
 |---------|-----------|----------|------|--------|-------------|
-| hashing | 256       | 1,00     | 0,90 | 0,93   | 0,6         |
-| BGE-M3  | 1024      | 1,00     | 1,00 | 1,00   | 260,0       |
+| hashing | 256       | 1,00     | 0,78 | 0,84   | 1,5         |
+| BGE-M3  | 1024      | 1,00     | 0,88 | 0,91   | 182,9       |
 
-Auf diesem kleinen Satz holt BGE-M3 jede Antwort auf Platz eins, braucht dafür
-aber rund vierhundertmal so lange je Frage. Für zwölf Fragen ist das
-nebensächlich, bei Tausenden Anfragen ist es eine Entscheidung. Genau deshalb
-wird gemessen und nicht behauptet.
+Beide finden jede Antwort unter den ersten fünf. BGE-M3 legt sie häufiger auf
+Platz eins und braucht dafür rund hundertzwanzigmal so lange je Frage. Für zwölf
+Fragen ist das nebensächlich, bei Tausenden Anfragen ist es eine Entscheidung.
+Genau deshalb wird gemessen und nicht behauptet.
 
 Dasselbe gilt für die deutsche Behandlung selbst. Über dieselben zwölf Fragen
 erreicht die deutsche Suche 10 von 12, eine sorgfältig gebaute naive Suche mit
