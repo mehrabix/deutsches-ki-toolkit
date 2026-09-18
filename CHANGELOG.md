@@ -4,6 +4,54 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.3.0a1]
+
+Dritte Vorabversion. Aus der Kette wird ein Werkzeugkasten: prüfen, einordnen,
+messen, vergleichen.
+
+### Hinzugefügt
+
+- **Terminologie-Prüfung**: Ein Glossar legt bevorzugte Schreibweisen fest; der
+  Prüflauf meldet Stellen, an denen davon abgewichen wird.
+- **Stilprüfung**: lange Sätze, Passivkonstruktionen, Nominalstil, Anglizismen,
+  Füllwörter, Wortwiederholungen und sehr lange Wörter. Ausdrücklich als
+  Hinweis, nicht als Korrektorat.
+- **Dokumentklassifikation**: zwölf Arten, erkannt über gewichtete deutsche
+  Wendungen und Strukturmerkmale. Der ausschlaggebende Beleg wird mitgeliefert.
+- **Fachpakete**: Recht, Finanzen, Personal, Technik und Industrie. Reine
+  Konfiguration und Daten, keine eigenen Codepfade.
+- **Bewertung der Antwortqualität**: Quellendeckung, Antwortrelevanz und
+  Quellenabdeckung, deterministisch berechnet, dazu ein optionales Urteil durch
+  ein Sprachmodell.
+- **Leistungsmessung**: Dokumente und Chunks je Sekunde, Latenz-Perzentile und
+  Speicherspitze, als `deutsches-ki benchmark`.
+- **Vergleich von Embedding-Modellen** auf demselben Bewertungssatz. Ein Modell,
+  das sich nicht laden lässt, wird als Zeile gemeldet und bricht nichts ab.
+- **Golden-Datensätze als JSON** unter `tests/regression/german/`. Neue Fälle
+  brauchen keinen Testcode.
+- **Deutsche Wortstämme** in den Such-Token. Damit findet „Ersatzteilen“ auch
+  „Ersatzteile“.
+- **GPU-Profil** für Ollama in Docker, damit niemand eine Grafikkarte braucht,
+  sie aber nutzen kann.
+
+### Geändert
+
+- Neue Befehle: `classify`, `terminology`, `style`, `benchmark`, dazu
+  `evaluate --compare` für den Modellvergleich.
+
+### Behoben
+
+- Die Stoppwortliste stand in normaler Schreibweise, die Such-Token sind aber
+  gefaltet. „gemäß“ wurde deshalb nie als Stoppwort erkannt.
+- Die Regel für Wortwiederholungen schlug über Zeilenumbrüche hinweg an. Eine
+  Überschrift, die den eigenen Absatz eröffnet, gilt nicht mehr als Wiederholung.
+
+### Gemessen
+
+Der Bewertungssatz verbessert sich durch die Wortstämme deutlich:
+Recall@1 von 0,75 auf 0,83, MRR von 0,84 auf 0,90, nDCG@5 von 0,88 auf 0,93,
+Recall@5 bleibt bei 1,00.
+
 ## [0.2.0a1]
 
 Zweite Vorabversion. Aus der Bibliothek ist eine Kette geworden: speichern,
