@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.table import Table
 
 from deutsches_ki import __version__
+from deutsches_ki.benchmarking import benchmark_pipeline, compare_embeddings
 from deutsches_ki.chunking import chunk_document
 from deutsches_ki.classification import classify_document
 from deutsches_ki.config import Settings
@@ -444,6 +445,92 @@ def _print_answer(answer_text: str, citations: list[Any]) -> None:
             console.print(f"  {citation.document} – {citation.section or '–'}{page}")
 
 
+def _print_embedding_comparison(
+    chunks: list[Chunk],
+    cases: EvaluationDataset,
+    models: list[str],
+    *,
+    top_k: int,
+) -> None:
+    """Zeigt den Vergleich mehrerer Embedding-Modelle."""
+    table = Table(title=f"Embedding-Modelle ({len(cases.cases)} Fälle)")
+    table.add_column("Modell")
+    table.add_column("Dim.", justify="right")
+    table.add_column("Recall@5", justify="right")
+    table.add_column("MRR", justify="right")
+    table.add_column("nDCG@5", justify="right")
+    table.add_column("ms/Frage", justify="right")
+
+    for result in compare_embeddings(chunks, cases, models, top_k=top_k):
+        if result.error is not None:
+            table.add_row(result.model, "–", "–", "–", "–", "nicht ladbar")
+            continue
+        table.add_row(
+            result.model,
+            str(result.dimension),
+            f"{result.recall.get('5', 0.0):.2f}",
+            f"{result.mrr:.2f}",
+            f"{result.ndcg.get('5', 0.0):.2f}",
+            f"{result.query_ms:.1f}",
+        )
+    console.print(table)
+
+
+@app.command("benchmark")
+def benchmark_cmd(
+    directory: Annotated[Path, typer.Argument(help="Ordner mit Dokumenten.")] = Path(
+        "datasets/fixtures"
+    ),
+    model: Annotated[str, typer.Option("--model", help="Embedding-Modell.")] = "hashing",
+    queries: Annotated[
+        str | None, typer.Option("--queries", help="Komma-getrennte Fragen für die Latenz.")
+    ] = None,
+    json_output: Annotated[bool, typer.Option("--json", help="Bericht als JSON.")] = False,
+    output: Annotated[
+        Path | None, typer.Option("-o", "--output", help="Bericht als Datei ablegen.")
+    ] = None,
+) -> None:
+    """Misst die Kette: einlesen, zerlegen, einbetten, indizieren, suchen."""
+    files = _source_files(directory)
+    if not files:
+        console.print("[yellow]Keine passenden Dateien gefunden.[/yellow]")
+        raise typer.Exit(code=1)
+
+    question_list = [item.strip() for item in (queries or "").split(",") if item.strip()]
+    report = benchmark_pipeline(files, embedder=get_embedder(model), queries=question_list)
+
+    payload = report.model_dump(mode="json")
+    if output is not None:
+        output.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        console.print(f"[green]Bericht geschrieben: {output}[/green]")
+    if json_output:
+        console.print_json(json.dumps(payload, ensure_ascii=False))
+        return
+
+    table = Table(title="Leistung")
+    table.add_column("Größe")
+    table.add_column("Wert", justify="right")
+    table.add_row("Dokumente", str(report.documents))
+    table.add_row("Chunks", str(report.chunks))
+    table.add_row("Einlesen", f"{report.parse_seconds:.3f} s")
+    table.add_row("Zerlegen", f"{report.chunk_seconds:.3f} s")
+    table.add_row("Einbetten", f"{report.embed_seconds:.3f} s")
+    table.add_row("Indizieren", f"{report.index_seconds:.3f} s")
+    table.add_row("Dokumente/s", f"{report.documents_per_second:.1f}")
+    table.add_row("Chunks/s", f"{report.chunks_per_second:.1f}")
+    if report.query_count:
+        table.add_row("Fragen", str(report.query_count))
+        table.add_row("Latenz p50", f"{report.query_p50_ms:.1f} ms")
+        table.add_row("Latenz p95", f"{report.query_p95_ms:.1f} ms")
+    table.add_row("Speicherspitze", f"{report.peak_memory_mb:.1f} MB")
+    console.print(table)
+
+    if report.skipped:
+        console.print("\n[yellow]Übersprungen:[/yellow]")
+        for entry in report.skipped:
+            console.print(f"  – {entry}")
+
+
 @app.command("ingest")
 def ingest_cmd(
     directory: Annotated[Path, typer.Argument(help="Ordner mit Dokumenten.")],
@@ -532,6 +619,10 @@ def evaluate_cmd(
         int, typer.Option("--top-k", help="Wie viele Treffer ausgewertet werden.")
     ] = 10,
     model: Annotated[str, typer.Option("--model", help="Embedding-Modell.")] = "hashing",
+    compare: Annotated[
+        str | None,
+        typer.Option("--compare", help="Komma-getrennte Modelle zum Vergleich."),
+    ] = None,
     json_output: Annotated[bool, typer.Option("--json", help="Bericht als JSON.")] = False,
     output: Annotated[
         Path | None, typer.Option("-o", "--output", help="Bericht als Datei ablegen.")
@@ -549,6 +640,11 @@ def evaluate_cmd(
     if not chunks:
         console.print("[yellow]Keine passenden Dateien im Korpus gefunden.[/yellow]")
         raise typer.Exit(code=1)
+
+    if compare:
+        models = [name.strip() for name in compare.split(",") if name.strip()]
+        _print_embedding_comparison(chunks, cases, models, top_k=top_k)
+        return
 
     retriever = InMemoryRetriever(get_embedder(model))
     retriever.add(chunks)
