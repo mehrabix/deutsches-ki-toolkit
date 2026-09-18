@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib.util
+
 import pytest
 
 from deutsches_ki.core.models import Chunk, SearchResult
@@ -75,6 +77,10 @@ def test_get_reranker_returns_lexical() -> None:
     assert isinstance(get_reranker("lexical"), LexicalReranker)
 
 
+@pytest.mark.skipif(
+    importlib.util.find_spec("sentence_transformers") is not None,
+    reason="Die Erweiterung 'embeddings' ist installiert, der Fehlerpfad greift nicht.",
+)
 def test_cross_encoder_requires_extra() -> None:
     with pytest.raises(MissingDependencyError, match="embeddings"):
         get_reranker("BAAI/bge-reranker-v2-m3")

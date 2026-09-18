@@ -39,6 +39,8 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
 - Fachpakete für Recht, Finanzen, Personal, Technik und Industrie
 - Leistungsmessung und Vergleich von Embedding-Modellen
 - Kommandozeile, MCP-Werkzeuge, Docker-Image
+- Embeddings über BGE-M3 und Cross-Encoder-Reranking, gegen echte Modelle
+  geprüft
 - spaCy- und Presidio-Detektoren gegen ein echtes deutsches Modell geprüft,
   samt CI-Lauf. Dabei bestätigt sich der Ausgangspunkt des Projekts: Presidio
   findet eine deutsche Steuernummer und eine Handelsregisternummer nicht, die
@@ -56,6 +58,22 @@ Vorher waren es Recall@1 0,75 und MRR 0,84. Der Unterschied kommt von den
 groben Wortstämmen in den Such-Token: „Ersatzteilen“ findet jetzt
 „Ersatzteile“. Genau für solche Vergleiche ist der Bewertungslauf da.
 
+Derselbe Befehl vergleicht auch Embedding-Modelle:
+
+```bash
+deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixtures --compare hashing,bge-m3
+```
+
+| Modell  | Dimension | Recall@5 |  MRR | nDCG@5 | ms je Frage |
+|---------|-----------|----------|------|--------|-------------|
+| hashing | 256       | 1,00     | 0,90 | 0,93   | 0,6         |
+| BGE-M3  | 1024      | 1,00     | 1,00 | 1,00   | 260,0       |
+
+Auf diesem kleinen Satz holt BGE-M3 jede Antwort auf Platz eins, braucht dafür
+aber rund vierhundertmal so lange je Frage. Für zwölf Fragen ist das
+nebensächlich, bei Tausenden Anfragen ist es eine Entscheidung. Genau deshalb
+wird gemessen und nicht behauptet.
+
 **Vorhanden, aber noch nicht gegen echte Systeme geprüft**
 
 Die folgenden Bausteine sind geschrieben und lassen sich einschalten, wurden
@@ -63,7 +81,6 @@ aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
 
 - GLiNER-Detektor (`gliner`)
 - Docling für PDF und DOCX (`docling`)
-- BGE-M3 und Cross-Encoder-Reranker (`embeddings`)
 - Ollama- und vLLM-Anbindung, bisher nur gegen Attrappen getestet
 - MCP-Server selbst (die Werkzeuge dahinter sind getestet)
 

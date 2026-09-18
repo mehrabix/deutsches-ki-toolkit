@@ -20,6 +20,24 @@ arbeitest, installiere das passende Extra:
 uv sync --extra dev --extra nlp --extra presidio
 ```
 
+**Achtung:** `uv sync` stellt die Umgebung exakt auf den Stand der Sperrdatei
+zurück. Was du danach von Hand installierst, ist beim nächsten `uv sync` wieder
+weg. Das betrifft vor allem das deutsche spaCy-Modell, das nicht auf PyPI liegt:
+
+```bash
+uv pip install --python .venv/Scripts/python.exe pip   # unter Windows
+uv run python -m spacy download de_core_news_sm
+```
+
+Für die Embedding-Tests werden Modelle von Hugging Face geladen. Die
+Voreinstellung in den Tests ist bewusst klein; lokal lässt sich ein größeres
+Modell erzwingen:
+
+```bash
+set DEUTSCHES_KI_TEST_EMBEDDING_MODEL=BAAI/bge-m3   # unter Windows
+uv run pytest tests/integration/test_embeddings.py -q
+```
+
 ## Bevor du einen Pull Request öffnest
 
 ```bash

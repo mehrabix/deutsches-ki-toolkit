@@ -39,8 +39,7 @@ class SentenceTransformerEmbedder:
                 ) from exc
             self._model = SentenceTransformer(model, device=device)
 
-        dimension = self._model.get_sentence_embedding_dimension()
-        self.dimension = int(dimension) if dimension else 0
+        self.dimension = _embedding_dimension(self._model)
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         vectors = self._model.encode(texts, normalize_embeddings=True)
@@ -49,3 +48,19 @@ class SentenceTransformerEmbedder:
     def embed_query(self, text: str) -> list[float]:
         vectors = self._model.encode([text], normalize_embeddings=True)
         return [float(value) for value in vectors[0]]
+
+
+def _embedding_dimension(model: Any) -> int:
+    """Fragt die Dimension ab, unabhängig von der Version der Bibliothek.
+
+    sentence-transformers hat die Methode umbenannt: In 6.x heißt sie
+    ``get_embedding_dimension``, vorher ``get_sentence_embedding_dimension``.
+    Der alte Name funktioniert noch, warnt aber.
+    """
+    for name in ("get_embedding_dimension", "get_sentence_embedding_dimension"):
+        getter = getattr(model, name, None)
+        if callable(getter):
+            dimension = getter()
+            if dimension:
+                return int(dimension)
+    return 0
