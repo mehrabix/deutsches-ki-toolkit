@@ -4,6 +4,66 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.4.0a1]
+
+Vierte Vorabversion. Der Schwerpunkt lag nicht auf neuen Bausteinen, sondern
+darauf, die vorhandenen gegen die echten Bibliotheken laufen zu lassen. Jeder
+optionale Baustein ist jetzt mindestens einmal mit seinem richtigen Gegenstück
+ausgeführt, und fast alle laufen in der CI.
+
+### Hinzugefügt
+
+- **Deutsche Gliederungserkennung**: `§ 4 Zahlungsbedingungen`, `Anlage 2
+  Vergütung` und `Abschnitt 3` gelten als Überschriften, auch wenn sie kein
+  Markdown sind. Vorher landete ein ganzes PDF in einem einzigen Abschnitt.
+- **Spracherkennung** beim Einlesen: deutsch, englisch oder gemischt.
+- **Deutsche Metadaten** beim Einlesen: Rechnungsnummer, Kundennummer,
+  Auftragsnummer, Vertragsnummer, USt-IdNr. und Datum.
+- Eine synthetische PDF-Testdatei samt Skript, das sie erzeugt.
+
+### Geändert
+
+- Die Erweiterung `gliner` enthält jetzt `tiktoken` und `protobuf`. Beide fehlen
+  in Gliners eigenen Abhängigkeiten; ohne sie ließ sich das Modell nicht laden.
+- Die Erweiterung `mcp` verlangt `mcp>=2`. In Version 2 heißt die Serverklasse
+  `MCPServer` statt `FastMCP`.
+- Mehrere Integrationsläufe dulden nun genau benannte Warnungen der
+  Fremdbibliotheken. Eigene Verfallswarnungen fallen weiterhin auf.
+
+### Behoben
+
+- **Der MCP-Server brach bei fehlerhaften Eingaben ab.** Er ruft die Werkzeuge
+  direkt auf und kam deshalb an der Fehlerbehandlung vorbei: Ein fehlendes
+  Dokument führte zu einem Absturz statt zu einer Fehlerantwort.
+- **Die Zitatprüfung verlor ihre wichtigsten Angaben.** `has_citations` und
+  `all_valid` werden berechnet und fehlten deshalb in den Metadaten einer
+  Antwort.
+- Die Methode zur Bestimmung der Embedding-Dimension wurde angepasst;
+  sentence-transformers 6 hat sie umbenannt.
+- PDF-Dateien sind in `.gitattributes` als binär gekennzeichnet. Ohne das
+  wandelt Git unter Windows die Zeilenenden um und macht die Byte-Offsets in der
+  xref-Tabelle ungültig.
+
+### Geprüft und in der CI
+
+- Embeddings über BGE-M3 und Cross-Encoder-Reranking gegen echte Modelle
+- PDF und DOCX über Docling
+- Ollama gegen ein echtes Modell, dazu die OpenAI-kompatible Anbindung gegen
+  einen lokalen Ersatzserver
+- GLiNER gegen ein echtes Modell, einschließlich des Vergleichs, dass es
+  Organisationen findet, die das deutsche spaCy-Modell auslässt
+- Der MCP-Server über seine echte Schnittstelle
+
+### Gemessen
+
+BGE-M3 holt auf dem Bewertungssatz jede Antwort auf Platz eins, braucht dafür
+aber rund vierhundertmal so lange je Frage wie das Hashing-Modell (260 ms
+gegenüber 0,6 ms).
+
+Das Urteil durch ein Sprachmodell erwies sich als unzuverlässig: Dieselbe Frage
+und dieselben Quellen ergaben dreimal die Treuewerte 0,0, 0,5 und 1,0. Die
+deterministischen Maße bleiben deshalb die Grundlage.
+
 ## [0.3.0a1]
 
 Dritte Vorabversion. Aus der Kette wird ein Werkzeugkasten: prüfen, einordnen,
