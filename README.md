@@ -36,6 +36,10 @@ Ziel des Projekts, nicht den Lieferstand der aktuellen Version.
 - Prompt-Injection- und Geheimniserkennung
 - Bewertung mit Recall, MRR und nDCG samt Datensatz
 - Kommandozeile, MCP-Werkzeuge, Docker-Image
+- spaCy- und Presidio-Detektoren gegen ein echtes deutsches Modell geprüft,
+  samt CI-Lauf. Dabei bestätigt sich der Ausgangspunkt des Projekts: Presidio
+  findet eine deutsche Steuernummer und eine Handelsregisternummer nicht, die
+  eigenen Muster schon.
 
 Der mitgelieferte Bewertungssatz (12 Fragen über die Testdateien) ergibt mit
 dem Hashing-Modell: Recall@1 0,75, Recall@5 1,00, MRR 0,84, nDCG@5 0,88.
@@ -50,7 +54,7 @@ deutsches-ki evaluate datasets/benchmark/deutsch_rag.yaml --corpus datasets/fixt
 Die folgenden Bausteine sind geschrieben und lassen sich einschalten, wurden
 aber noch nicht mit den jeweiligen Bibliotheken ausgeführt:
 
-- spaCy-, Presidio- und GLiNER-Detektoren (`nlp`, `presidio`, `gliner`)
+- GLiNER-Detektor (`gliner`)
 - Docling für PDF und DOCX (`docling`)
 - BGE-M3 und Cross-Encoder-Reranker (`embeddings`)
 - Ollama- und vLLM-Anbindung, bisher nur gegen Attrappen getestet
