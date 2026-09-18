@@ -13,6 +13,7 @@ from collections.abc import Collection
 from typing import Literal
 
 from deutsches_ki.text.dictionary import is_known_word
+from deutsches_ki.text.folding import fold_sharp_s, fold_umlauts
 
 __all__ = [
     "NormalizeMode",
@@ -58,19 +59,6 @@ _DASH_MAP = str.maketrans(
         "\u2012": "-",
     }
 )
-
-_UMLAUT_MAP = str.maketrans(
-    {
-        "ä": "ae",
-        "ö": "oe",
-        "ü": "ue",
-        "Ä": "Ae",
-        "Ö": "Oe",
-        "Ü": "Ue",
-    }
-)
-
-_SS_MAP = str.maketrans({"ß": "ss"})
 
 _DOUBLE_QUOTES = frozenset({"„", "“", "”", '"', "«", "»", "‟", "″"})
 
@@ -142,12 +130,12 @@ def normalize_ergaenzung(text: str, *, dictionary: Collection[str] | None = None
 
 def normalize_umlauts(text: str) -> str:
     """Löst Umlaute auf (nur für die Suchform gedacht)."""
-    return text.translate(_UMLAUT_MAP)
+    return fold_umlauts(text)
 
 
 def normalize_ss(text: str) -> str:
     """Wandelt ß in ss um (nur für die Suchform gedacht)."""
-    return text.translate(_SS_MAP)
+    return fold_sharp_s(text)
 
 
 def normalize_case(text: str) -> str:

@@ -25,6 +25,7 @@ from deutsches_ki.text.normalize import (
 )
 from deutsches_ki.text.query import default_glossary, expand_query
 from deutsches_ki.text.segment import split_sentences, tokenize_words
+from deutsches_ki.text.tokens import search_tokens
 
 __all__ = [
     "ABBREVIATIONS",
@@ -48,6 +49,7 @@ __all__ = [
     "normalize_umlauts",
     "normalize_unicode",
     "normalize_whitespace",
+    "search_tokens",
     "split_sentences",
     "tokenize_words",
 ]
