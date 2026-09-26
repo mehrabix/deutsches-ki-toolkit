@@ -290,3 +290,59 @@ def test_plain_number_at_sentence_end_stays_merged() -> None:
     Ordnungszahlen und Aufzählungen bei Weitem.
     """
     assert len(_texts("Die Antwort ist 42. Danach gehen wir.")) == 1
+
+
+# --- Weitere Fälle aus der Durchsicht ---
+#
+# Diese Beispiele stammen aus einer Prüfung der Segmentierung. Sie decken
+# Schreibweisen ab, die in deutschen Geschäfts- und Behördentexten häufig
+# vorkommen und in keiner der Gruppen oben stehen.
+
+
+def test_clock_time_with_dot_is_not_split() -> None:
+    text = "Dr. Müller sagte: „Wir treffen uns um 10.30 Uhr.“"
+    assert _texts(text) == [text]
+
+
+def test_money_amount_ends_sentence_before_new_one() -> None:
+    text = "Die Kosten betragen 1.250,50 EUR. Die Zahlung erfolgt am 1. Oktober."
+    assert _texts(text) == [
+        "Die Kosten betragen 1.250,50 EUR.",
+        "Die Zahlung erfolgt am 1. Oktober.",
+    ]
+
+
+def test_reference_chain_with_lit_is_not_split() -> None:
+    text = "Gem. § 4 Abs. 2 Nr. 3 lit. a) gilt die Regelung."
+    assert _texts(text) == [text]
+
+
+def test_multiline_address_block_stays_together() -> None:
+    text = "Muster GmbH\nz. Hd. Frau Müller\nHauptstr. 15\n10115 Berlin"
+    assert _texts(text) == [text]
+
+
+def test_comma_keeps_abbreviation_inside_the_sentence() -> None:
+    """Der Punkt vor einer Abkürzung entscheidet nicht allein.
+
+    Auf „Berlin.“ folgt mit „z. B.“ keine neue Aussage, sondern eine
+    Aufzählung: erst der Satzanfang danach entscheidet.
+    """
+    assert _texts("Die Firma sitzt in Berlin, z. B. am Alexanderplatz.") == [
+        "Die Firma sitzt in Berlin, z. B. am Alexanderplatz."
+    ]
+    assert len(_texts("Die Firma sitzt in Berlin. Danach beginnt die Pause.")) == 2
+
+
+def test_paragraphs_of_a_paragraph_section_stay_addressable() -> None:
+    text = (
+        "§ 1 Allgemeine Bestimmungen\n\n(1) Dies ist der erste Absatz.\n\n"
+        "(2) Dies ist der zweite Absatz.\n\n§ 2 Haftung\n\n(1) Der zweite Paragraph."
+    )
+    assert _texts(text) == [
+        "§ 1 Allgemeine Bestimmungen",
+        "(1) Dies ist der erste Absatz.",
+        "(2) Dies ist der zweite Absatz.",
+        "§ 2 Haftung",
+        "(1) Der zweite Paragraph.",
+    ]

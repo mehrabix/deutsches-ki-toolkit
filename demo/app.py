@@ -489,8 +489,10 @@ with gr.Blocks(title="Deutsches KI-Toolkit") as demo:
 
     with gr.Tab("Struktur"):
         gr.Markdown(
-            "Ein Punkt trennt keinen Satz, wenn davor `§ 1`, `1.000,00`, "
-            "`30.09.2024`, `z. B.` oder `Gem.` steht."
+            "Satzgrenzen werden kontextabhängig erkannt. Deutsche Abkürzungen "
+            "(`z. B.`, `Gem.`, `Abs.`), Geldbeträge (`1.000,00`), Datumsangaben "
+            "(`30.09.2024`) und Paragraphen (`§ 1`) beenden keinen Satz; nach "
+            "mehrdeutigen Abkürzungen entscheidet das folgende Wort."
         )
         struktur_eingabe = gr.Textbox(label="Text", lines=12, value=BEISPIEL_VERTRAG)
         struktur_button = gr.Button("Zerlegen", variant="primary")
