@@ -1,0 +1,51 @@
+{
+  "name": "german_identifiers",
+  "description": "Rechnungs-, Auftrags-, Bestell- und Kundennummern. Die Abkürzung steht am Ende eines Kompositums („Rechnungsnr.“), dort greift die allgemeine Abkürzungserkennung nicht, und auf den Punkt folgt die Nummer.",
+  "cases": [
+    {
+      "input": "Rechnungsnr. 5 ist offen.",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Auftragsnr. 2024-001 liegt vor.",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Bestellnr. 8 fehlt.",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Kundennr. 4711",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Vertragsnr. 3 ist gültig.",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Sammelbd. 3",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "In Amerika. 5 Jahre später.",
+      "check": "sentence_count",
+      "expected": 2
+    },
+    {
+      "input": "Der Stoff. 5 Meter reichen.",
+      "check": "sentence_count",
+      "expected": 2
+    },
+    {
+      "input": "Der Start. 5 Minuten später.",
+      "check": "sentence_count",
+      "expected": 2
+    }
+  ]
+}

@@ -26,6 +26,21 @@
       "input": "Die Frist beträgt 30 Tage.",
       "check": "pii_types",
       "expected": []
+    },
+    {
+      "input": "Der Auftraggeber beauftragt die Beispiel GmbH, Werkstattstr. 5, 10115 Berlin.",
+      "check": "sentence_count",
+      "expected": 1
+    },
+    {
+      "input": "Wohnhaft Musterstr. 12, 10115 Berlin. Danach zog er um.",
+      "check": "sentence_count",
+      "expected": 2
+    },
+    {
+      "input": "Er wohnt in der Hauptstr. Danach zog er um.",
+      "check": "sentence_count",
+      "expected": 2
     }
   ]
 }

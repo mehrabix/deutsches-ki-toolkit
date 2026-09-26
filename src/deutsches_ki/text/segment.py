@@ -20,6 +20,18 @@ _FIRST_WORD = re.compile(r"\w+", flags=re.UNICODE)
 # trennt keinen Satz.
 _SPACED_DATE = re.compile(r"^\d{1,2}\s*\.\s*\d{1,2}")
 
+# Abkürzungen, die am Ende eines Kompositums stehen und eine Nummer einführen:
+# „Rechnungsnr. 5“, „Werkstattstr. 5“, „Sammelbd. 3“, „Am Marktpl. 2“. Die
+# allgemeine Abkürzungserkennung findet sie nicht, weil vor der Abkürzung ein
+# Wortzeichen steht („Rechnungs|nr.“). Ohne diese Regel zerfallen solche
+# Angaben in zwei Sätze, weil auf den Punkt eine Ziffer folgt.
+#
+# Bewusst eine kurze, feste Liste. Ein allgemeiner Test auf „Wort endet auf eine
+# Abkürzung“ würde echte Satzenden verschlucken: „Amerika. 5 Jahre“ und
+# „Der Stoff. 5 Meter“ enden auf „ca.“ und „ff.“, sind aber keine Komposita.
+_COMPOUND_SUFFIXES = ("bde", "bd", "nrn", "nr", "pl", "str")
+_WORD_END = re.compile(r"(\w+)$", flags=re.UNICODE)
+
 _MONTHS = frozenset(
     {
         "januar",
@@ -356,6 +368,19 @@ def _is_standalone_ordinal(text: str, start: int) -> bool:
     return ziffern <= 3
 
 
+def _is_number_after_compound_abbreviation(text: str, start: int, rest: str) -> bool:
+    """Steht vor dem Punkt eine eingeklebte Abkürzung und danach eine Nummer?
+
+    „Rechnungsnr. 5“ und „Werkstattstr. 5“ sind Angaben, der Punkt trennt keinen
+    Satz. Ohne Nummer bleibt der Punkt ein mögliches Satzende: „Er wohnt in der
+    Hauptstr. Danach zog er um.“
+    """
+    if not rest[:1].isdigit():
+        return False
+    match = _WORD_END.search(text[:start])
+    return match is not None and match.group(1).lower().endswith(_COMPOUND_SUFFIXES)
+
+
 def _is_boundary(text: str, start: int, end: int, spans: list[tuple[int, int, str]]) -> bool:
     punct = text[start:end]
     rest = text[end:].lstrip()
@@ -372,6 +397,9 @@ def _is_boundary(text: str, start: int, end: int, spans: list[tuple[int, int, st
         if abbreviation not in SENTENCE_END_ABBREVIATIONS:
             return False
         return _starts_sentence(rest)
+
+    if _is_number_after_compound_abbreviation(text, start, rest):
+        return False
 
     if start > 0 and text[start - 1].isdigit():
         if _SPACED_DATE.match(rest):

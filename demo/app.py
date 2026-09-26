@@ -97,6 +97,20 @@ def _naive_chunks(text: str, size: int = 140) -> list[str]:
     return [text[index : index + size] for index in range(0, len(text), size)]
 
 
+def _kuerzen(text: str, laenge: int) -> str:
+    """Kürzt an einem Wortende.
+
+    Ein harter Schnitt mitten im Wort lässt „Werkstattstr.“ als „Werkstatts“
+    enden — das sieht dann aus wie ein Segmentierungsfehler, obwohl der Satz in
+    Ordnung ist.
+    """
+    einzeilig = " ".join(text.split())
+    if len(einzeilig) <= laenge:
+        return einzeilig
+    schnitt = einzeilig[:laenge].rsplit(" ", 1)[0]
+    return f"{schnitt or einzeilig[:laenge]} …"
+
+
 def _document(text: str) -> GermanDocument:
     return GermanDocument.from_text(text, title="Demo")
 
@@ -127,8 +141,8 @@ def schritt_struktur(text: str) -> tuple[str, str, str]:
     saetze = split_sentences(text)
     abschnitte = list(document.document.iter_sections())
 
-    naiv_text = "\n".join(f"- {html.escape(part[:80])}" for part in naive[:14])
-    gut_text = "\n".join(f"- {html.escape(satz.text[:80])}" for satz in saetze[:14])
+    naiv_text = "\n".join(f"- {html.escape(_kuerzen(part, 80))}" for part in naive[:14])
+    gut_text = "\n".join(f"- {html.escape(_kuerzen(satz.text, 80))}" for satz in saetze[:14])
 
     kopf = f"**{len(naive)} Bruchstücke**\n\n"
     rechts = f"**{len(saetze)} Sätze**\n\n{gut_text}"

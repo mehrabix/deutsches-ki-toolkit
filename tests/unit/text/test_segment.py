@@ -217,6 +217,69 @@ def test_other_missing_abbreviations_are_not_split() -> None:
         assert len(_texts(text)) == 2, text
 
 
+# --- Anschriften und eingeklebte Abkürzungen ---
+#
+# Vorher zerfiel „Werkstattstr. 5, 10115 Berlin.“ in zwei Sätze. Die Abkürzung
+# „Str.“ steht am Ende eines Kompositums, dort greift keine der bekannten
+# Abkürzungen, und auf den Punkt folgt die Hausnummer — eine Ziffer, die einen
+# Satz beginnen darf. Dieselbe Ursache trifft Rechnungs- und Bestellnummern:
+# „Rechnungsnr. 5“. Ohne Nummer bleibt der Punkt ein Satzende.
+
+
+def test_street_abbreviation_with_house_number_is_not_split() -> None:
+    text = "Der Auftraggeber beauftragt die Beispiel GmbH, Werkstattstr. 5, 10115 Berlin."
+    assert _texts(text) == [text]
+
+
+def test_street_abbreviations_in_addresses_are_not_split() -> None:
+    for text in (
+        "Wohnhaft Musterstr. 12, 10115 Berlin.",
+        "Die Firma sitzt in der Hauptstr. 42, 80331 München.",
+        "Bahnhofstr. 5",
+        "Am Marktpl. 3",
+        "Lindenstr. 414-424",
+    ):
+        assert len(_texts(text)) == 1, text
+
+
+def test_glued_abbreviation_with_number_is_not_split() -> None:
+    for text in (
+        "Rechnungsnr. 5 ist offen.",
+        "Auftragsnr. 2024-001 liegt vor.",
+        "Bestellnr. 8 fehlt.",
+        "Kundennr. 4711",
+        "Vertragsnr. 3 ist gültig.",
+        "Sammelbd. 3",
+    ):
+        assert len(_texts(text)) == 1, text
+
+
+def test_ordinary_word_ending_in_abbreviation_still_splits() -> None:
+    """Die Regel darf keine echten Satzenden verschlucken.
+
+    „Amerika.“ endet auf „ca.“, „Stoff.“ auf „ff.“, „Start.“ auf „art.“ — das
+    sind keine Komposita mit eingeklebter Abkürzung.
+    """
+    for text in (
+        "In Amerika. 5 Jahre später.",
+        "Der Stoff. 5 Meter reichen.",
+        "Der Start. 5 Minuten später.",
+        "Er trägt einen Bart. Danach ging er.",
+    ):
+        assert len(_texts(text)) == 2, text
+
+
+def test_glued_abbreviation_at_sentence_end_is_split() -> None:
+    """Ohne Nummer bleibt „Hauptstr.“ ein mögliches Satzende."""
+    text = "Er wohnt in der Hauptstr. Danach zog er um."
+    assert _texts(text) == ["Er wohnt in der Hauptstr.", "Danach zog er um."]
+
+
+def test_street_abbreviation_before_city_is_not_split() -> None:
+    text = "Lieferung an die Lindenstr. 414-424, 50667 Köln. Danach nichts mehr."
+    assert len(_texts(text)) == 2
+
+
 def test_plain_number_at_sentence_end_stays_merged() -> None:
     """Bekannte Grenze der Regel für Ordnungszahlen.
 
