@@ -4,6 +4,32 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.4]
+
+Nimmt die Kategorien einer weiteren Prüfrunde auf: Adressen im Web, Gesetzbücher
+am Satzende und Abkürzungsgemische. Die Sammlung
+`tests/regression/german/german_segmentation.json` wächst auf 92 Fälle.
+
+### Behoben
+
+- **Gesetzbücher am Satzende zusammengezogen.** „… aus § 823 Abs. 1 BGB. Danach
+  verjährt er.“ blieb ein Satz. `BGB.`, `StGB.`, `StPO.`, `ZPO.`, `HGB.`, `AO.`,
+  `UStG.` und `StVO.` stehen jetzt in `SENTENCE_END_ABBREVIATIONS`. Ob wirklich
+  ein Satzende vorliegt, entscheidet wie bisher der Satzanfang danach; mitten im
+  Satz bleibt „… aus § 823 BGB verjährt …“ unberührt.
+
+### Geprüft
+
+- **URLs und E-Mail-Adressen.** Beide Kategorien waren nicht abgedeckt. Punkte
+  in Domain, Pfad und Adresse trennen keinen Satz: „Die Adresse ist
+  https://beispiel.de.“ bleibt eine Einheit, „Siehe https://example.de/pfad.
+  Danach folgt mehr.“ ergibt zwei Sätze.
+
+### Geändert
+
+- Die Demo sagt „Jeder Schritt unten vergleicht die deutsche Verarbeitung mit
+  einer naiven Methode.“ statt „… stellt sie einer naiven gegenüber.“
+
 ## [0.5.3]
 
 Erweitert die Satzsegmentierung um Fälle aus einer breiten Prüfung mit deutschen

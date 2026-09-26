@@ -74,6 +74,30 @@
     { "input": "Prof. Dr. Dr. h. c. Max Mustermann sprach.", "check": "sentence_count", "expected": 1 },
 
     { "input": "Der Zug fährt um 10.30 Uhr. Danach kommt der nächste.", "check": "sentence_count", "expected": 2 },
-    { "input": "Die Sitzung begann um 9.00 Uhr und endete um 10.30 Uhr.", "check": "sentence_count", "expected": 1 }
+    { "input": "Die Sitzung begann um 9.00 Uhr und endete um 10.30 Uhr.", "check": "sentence_count", "expected": 1 },
+
+    { "input": "Siehe https://example.de/pfad. Danach folgt mehr.", "check": "sentence_count", "expected": 2 },
+    { "input": "Die Seite www.beispiel.de hilft weiter.", "check": "sentence_count", "expected": 1 },
+    { "input": "Die Adresse ist https://beispiel.de.", "check": "sentence_count", "expected": 1 },
+    { "input": "Die Domain beispiel.de kostet 5 EUR.", "check": "sentence_count", "expected": 1 },
+    { "input": "Mehr unter http://example.de. Der Rest ist bekannt.", "check": "sentence_count", "expected": 2 },
+
+    { "input": "Kontakt: max.mustermann@example.de.", "check": "sentence_count", "expected": 1 },
+    { "input": "Schreiben Sie an max.mustermann@example.de. Danach folgt nichts.", "check": "sentence_count", "expected": 2 },
+    { "input": "Die Mail an info@beispiel.de kam an. Sie war kurz.", "check": "sentence_count", "expected": 2 },
+    { "input": "Die Adresse a.b@example.de ist gültig.", "check": "sentence_count", "expected": 1 },
+
+    { "input": "Die Frist beträgt 30 Tage, d. h. bis zum 30.09.2024.", "check": "sentence_count", "expected": 1 },
+    { "input": "Der Preis ist 1.250,50 EUR bzw. 1.300,00 EUR.", "check": "sentence_count", "expected": 1 },
+    { "input": "Es gilt § 4 Abs. 2 Nr. 3 lit. a) bzw. § 5.", "check": "sentence_count", "expected": 1 },
+    { "input": "Das gilt z. B. für GmbHs, AGs usw.", "check": "sentence_count", "expected": 1 },
+    { "input": "Der Anspruch folgt aus § 823 Abs. 1 BGB. Danach verjährt er.", "check": "sentence_count", "expected": 2 },
+    { "input": "Gem. § 4 Abs. 2 i. V. m. § 7 lit. b) gilt die Regelung.", "check": "sentence_count", "expected": 1 },
+
+    { "input": "Lieferung an den Lindenweg 414-424, 50667 Köln.", "check": "sentence_count", "expected": 1 },
+    { "input": "Die Firma sitzt in der Bahnhofstr. 7a, 80331 München.", "check": "sentence_count", "expected": 1 },
+    { "input": "Der Wert ist 3,14159. Danach folgt mehr.", "check": "sentence_count", "expected": 2 },
+    { "input": "Die Summe beträgt 12.345.678,90 EUR.", "check": "sentence_count", "expected": 1 },
+    { "input": "Sie sagte: „Das kostet 1.000,00 EUR.“ Danach ging sie.", "check": "sentence_count", "expected": 2 }
   ]
 }

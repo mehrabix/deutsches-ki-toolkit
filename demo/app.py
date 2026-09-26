@@ -497,7 +497,7 @@ with gr.Blocks(title="Deutsches KI-Toolkit", analytics_enabled=False) as demo:
 
         Deutsche Texte brauchen bei Segmentierung, Suche und der Erkennung
         personenbezogener Daten teilweise eine eigene Verarbeitung. Jeder Schritt
-        unten stellt sie einer naiven gegenüber.
+        unten vergleicht die deutsche Verarbeitung mit einer naiven Methode.
 
         Alles läuft auf diesem Server. Eingaben werden nicht an Dritte gesendet
         und nicht dauerhaft gespeichert; hochgeladene Dateien liegen nur

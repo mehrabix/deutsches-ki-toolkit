@@ -422,3 +422,44 @@ def test_common_titles_and_company_forms_are_not_split() -> None:
         "Prof. Dr. Dr. h. c. Max Mustermann sprach.",
     ):
         assert len(_texts(text)) == 1, text
+
+
+# --- Gesetzbücher am Satzende ---
+#
+# „BGB.“ stand zwar in der Liste, durfte aber kein Satzende sein. „… aus § 823
+# Abs. 1 BGB. Danach verjährt er.“ blieb deshalb ein Satz.
+
+
+def test_law_code_at_sentence_end_is_split() -> None:
+    assert _texts("Der Anspruch folgt aus § 823 Abs. 1 BGB. Danach verjährt er.") == [
+        "Der Anspruch folgt aus § 823 Abs. 1 BGB.",
+        "Danach verjährt er.",
+    ]
+
+
+def test_law_code_inside_a_sentence_is_not_split() -> None:
+    for text in (
+        "Das BGB regelt die Ansprüche.",
+        "Der Anspruch aus § 823 BGB verjährt in drei Jahren.",
+    ):
+        assert len(_texts(text)) == 1, text
+
+
+# --- Adressen im Web ---
+
+
+def test_url_and_email_are_not_split() -> None:
+    for text in (
+        "Die Adresse ist https://beispiel.de.",
+        "Kontakt: max.mustermann@example.de.",
+        "Die Domain beispiel.de kostet 5 EUR.",
+        "Die Adresse a.b@example.de ist gültig.",
+    ):
+        assert len(_texts(text)) == 1, text
+
+
+def test_url_at_sentence_end_is_split() -> None:
+    assert _texts("Siehe https://example.de/pfad. Danach folgt mehr.") == [
+        "Siehe https://example.de/pfad.",
+        "Danach folgt mehr.",
+    ]

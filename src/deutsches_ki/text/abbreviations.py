@@ -450,6 +450,17 @@ SENTENCE_END_ABBREVIATIONS: frozenset[str] = frozenset(
         "v.chr.",
         "n. chr.",
         "n.chr.",
+        # Gesetzbücher stehen im Rechtssatz häufig am Satzende: „… aus § 823
+        # Abs. 1 BGB. Der Anspruch verjährt.“ Ob wirklich ein Satzende vorliegt,
+        # entscheidet wie bei den übrigen Einträgen der Satzanfang danach.
+        "bgb.",
+        "stgb.",
+        "stpo.",
+        "zpo.",
+        "hgb.",
+        "ao.",
+        "ustg.",
+        "stvo.",
     }
 )
 
