@@ -19,10 +19,11 @@ statt behauptet.
 
 - **Struktur** — Satzgrenzen werden kontextabhängig erkannt: Abkürzungen
   (`z. B.`, `Gem.`, `Abs.`), Geldbeträge (`1.000,00`), Datumsangaben
-  (`30.09.2024`) und Paragraphen (`§ 1`) beenden keinen Satz. Nach mehrdeutigen
-  Abkürzungen entscheidet das folgende Wort. Die Sätze stehen unter der
-  Überschrift, zu der sie gehören, statt in einer flachen Liste. Der Vergleich
-  zeigt, was naives Trennen am Punkt anrichtet.
+  (`30.09.2024`) und Paragraphen (`§ 1`) beenden keinen Satz. Bei mehrdeutigen
+  Abkürzungen entscheiden der nachfolgende Kontext und die Groß- und
+  Kleinschreibung. Die Sätze stehen unter der Überschrift, zu der sie gehören,
+  statt in einer flachen Liste. Der Vergleich zeigt, was naives Trennen am Punkt
+  anrichtet.
 - **Sensible Daten** — Prüfsummen entscheiden mit. Eine IBAN wird nur gemeldet,
   wenn der Modulo-97-Test aufgeht; eine um eine Ziffer veränderte IBAN fällt
   durch. Umschalten zwischen Schwärzen, Ersetzen, Maskieren, Hashen und
@@ -36,9 +37,10 @@ statt behauptet.
   wirklich existieren. Ein Modell, das `[9]` schreibt, obwohl es drei Quellen
   gab, fällt damit auf.
 
-Alles läuft auf dem Server dieser Demo. Eingaben werden nicht an Dritte
-gesendet und nicht dauerhaft gespeichert; hochgeladene Dateien liegen nur
-vorübergehend im Container. Gradios anonyme Nutzungsstatistik ist abgeschaltet.
+Alles läuft auf dem Server dieser Demo. Die Anwendung schreibt keine Dateien,
+führt keine Datenbank und sendet nichts an Dritte; hochgeladene Dateien liegen
+nur vorübergehend im Container. Die anonyme Nutzungsstatistik von Gradio ist
+abgeschaltet. Die Plattform protokolliert technische Ausgaben des Containers.
 
 Quelltext und Dokumentation: <https://github.com/mehrabix/deutsches-ki-toolkit>
 

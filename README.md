@@ -1188,7 +1188,7 @@ statt durchzurutschen.
 Die ersten vier Schritte brauchen außer Gradio nichts. Für PDF-Upload kommt
 `docling` dazu, für den fünften Schritt `torch` und `transformers`. Alles läuft
 auf dem eigenen Rechner; es wird nichts gespeichert und nichts nach außen
-gegeben. Gradios anonyme Nutzungsstatistik ist in der Demo abgeschaltet.
+gegeben. Die anonyme Nutzungsstatistik von Gradio ist in der Demo abgeschaltet.
 
 Dieselbe Demo läuft ohne Installation unter
 <https://huggingface.co/spaces/mehrabix/deutsches-ki-toolkit>.

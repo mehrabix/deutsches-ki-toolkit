@@ -4,6 +4,38 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.3]
+
+Erweitert die Satzsegmentierung um Fälle aus einer breiten Prüfung mit deutschen
+Texten. Die Sammlung liegt als `tests/regression/german/german_segmentation.json`
+mit 66 Fällen bei und läuft in der CI mit.
+
+### Behoben
+
+- **Monats- und Wochentagskürzel fehlten.** „im Jan. 2024“ und „am Mo. 5. Mai“
+  wurden getrennt, weil auf den Punkt eine Zahl folgte. `Jan.`, `Feb.`, `Mo.`
+  und die übrigen Kürzel standen nicht in der Liste. „so.“ greift nur, wenn eine
+  Zahl folgt, damit „Das ist so. Danach …“ weiterhin ein Satzende bleibt.
+- **Ein Satzende im Anführungszeichen wurde nicht erkannt.** Zwischen Punkt und
+  Leerzeichen steht noch das schließende Zeichen: „Er sagte „Hallo.“ Danach ging
+  er.“ blieb ein Satz. Die Grenze berücksichtigt jetzt schließende Zeichen.
+- **Gliederungszeichen wurden zu eigenen Sätzen.** „I. Der erste Punkt. II. Der
+  zweite Punkt.“ ergab vier Sätze, weil römische Zahlen und Buchstaben nicht als
+  Aufzählung galten. Ein kleingeschriebener Aufzählungspunkt („b.“) wurde
+  zugleich gar nicht als Satzanfang erkannt.
+- **Häufige Titel und Firmenformen fehlten.** „GmbH & Co. KG“, „Dr. med.“ und
+  „Dr. h. c.“ wurden getrennt.
+
+### Geändert
+
+- Die Demo beschreibt die Segmentierung als kontextabhängig und nennt für
+  mehrdeutige Abkürzungen den nachfolgenden Kontext und die Groß- und
+  Kleinschreibung.
+- Die Demo nennt den Datenschutz genauer: keine Dateien, keine Datenbank, keine
+  Weitergabe; hochgeladene Dateien liegen nur vorübergehend im Container. Die
+  anonyme Nutzungsstatistik von Gradio ist abgeschaltet. Die Plattform
+  protokolliert technische Containerausgaben.
+
 ## [0.5.2]
 
 Behebt zwei weitere Fehler der Satzsegmentierung: Anschriften mit abgekürzter

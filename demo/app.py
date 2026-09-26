@@ -495,13 +495,13 @@ with gr.Blocks(title="Deutsches KI-Toolkit", analytics_enabled=False) as demo:
         """
         # Deutsches KI-Toolkit
 
-        Deutsche Texte werden anders zerlegt, anders gesucht und anders auf
-        personenbezogene Daten geprüft als englische. Jeder Schritt unten stellt
-        die deutsche Behandlung einer naiven gegenüber.
+        Deutsche Texte brauchen bei Segmentierung, Suche und der Erkennung
+        personenbezogener Daten teilweise eine eigene Verarbeitung. Jeder Schritt
+        unten stellt sie einer naiven gegenüber.
 
         Alles läuft auf diesem Server. Eingaben werden nicht an Dritte gesendet
         und nicht dauerhaft gespeichert; hochgeladene Dateien liegen nur
-        vorübergehend im Container. Gradios anonyme Nutzungsstatistik ist
+        vorübergehend im Container. Die anonyme Nutzungsstatistik von Gradio ist
         abgeschaltet.
         """
     )
@@ -510,8 +510,9 @@ with gr.Blocks(title="Deutsches KI-Toolkit", analytics_enabled=False) as demo:
         gr.Markdown(
             "Satzgrenzen werden kontextabhängig erkannt. Deutsche Abkürzungen "
             "(`z. B.`, `Gem.`, `Abs.`), Geldbeträge (`1.000,00`), Datumsangaben "
-            "(`30.09.2024`) und Paragraphen (`§ 1`) beenden keinen Satz; nach "
-            "mehrdeutigen Abkürzungen entscheidet das folgende Wort."
+            "(`30.09.2024`) und Paragraphen (`§ 1`) beenden keinen Satz. Bei "
+            "mehrdeutigen Abkürzungen entscheiden der nachfolgende Kontext und "
+            "die Groß- und Kleinschreibung."
         )
         struktur_eingabe = gr.Textbox(label="Text", lines=12, value=BEISPIEL_VERTRAG)
         struktur_button = gr.Button("Zerlegen", variant="primary")

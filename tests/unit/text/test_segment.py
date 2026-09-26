@@ -346,3 +346,79 @@ def test_paragraphs_of_a_paragraph_section_stay_addressable() -> None:
         "§ 2 Haftung",
         "(1) Der zweite Paragraph.",
     ]
+
+
+# --- Monats- und Wochentagskürzel ---
+#
+# „Jan.“ und „Mo.“ standen nicht in der Liste der Abkürzungen. Auf den Punkt
+# folgte eine Zahl, und eine Zahl durfte einen Satz beginnen: „im Jan.“ und
+# „2024.“ wurden zwei Sätze.
+
+
+def test_month_abbreviation_before_year_is_not_split() -> None:
+    for text in (
+        "Der Termin ist im Jan. 2024.",
+        "Der Termin ist im Feb. und im Mär. 2025.",
+        "Der Kurs beginnt im Okt. 2025.",
+    ):
+        assert len(_texts(text)) == 1, text
+
+
+def test_weekday_abbreviation_before_date_is_not_split() -> None:
+    assert _texts("Am Mo. 5. Mai beginnt die Frist.") == ["Am Mo. 5. Mai beginnt die Frist."]
+
+
+def test_word_so_still_ends_a_sentence() -> None:
+    """„so.“ als Wort bleibt ein Satzende.
+
+    „So.“ ist auch das Wochentagskürzel für Sonntag. Die Regel greift deshalb
+    nur, wenn eine Zahl folgt: „am So. 5. Mai“, nicht „Das ist so. Danach“.
+    """
+    assert _texts("Das ist so. Danach gehen wir.") == ["Das ist so.", "Danach gehen wir."]
+
+
+# --- Anführungszeichen ---
+#
+# Zwischen Punkt und Leerzeichen stand noch das schließende Anführungszeichen.
+# Die Grenze verlangte ein Leerzeichen direkt nach dem Punkt und fand sie
+# deshalb nicht: „Er sagte „Hallo.“ Danach“ blieb ein Satz.
+
+
+def test_sentence_end_inside_quotes_is_split() -> None:
+    assert _texts("Er sagte „Hallo.“ Danach ging er.") == [
+        "Er sagte „Hallo.“",
+        "Danach ging er.",
+    ]
+
+
+def test_question_inside_quotes_is_split() -> None:
+    assert len(_texts("Sie fragte: „Kommst du?“ Ich antwortete nicht.")) == 2
+
+
+# --- Gliederungen mit römischen Zahlen und Buchstaben ---
+#
+# „I.“ und „a.“ galten als eigener Satz, und ein Aufzählungspunkt mit kleinem
+# Buchstaben wurde gar nicht als Satzanfang erkannt.
+
+
+def test_roman_numeral_enumeration_stays_with_its_item() -> None:
+    assert _texts("I. Der erste Punkt. II. Der zweite Punkt.") == [
+        "I. Der erste Punkt.",
+        "II. Der zweite Punkt.",
+    ]
+
+
+def test_letter_enumeration_stays_with_its_item() -> None:
+    assert _texts("a. Der erste Punkt. b. Der zweite Punkt.") == [
+        "a. Der erste Punkt.",
+        "b. Der zweite Punkt.",
+    ]
+
+
+def test_common_titles_and_company_forms_are_not_split() -> None:
+    for text in (
+        "Die Beispiel GmbH & Co. KG wurde gegründet.",
+        "Frau Dr. med. Anna Müller kam.",
+        "Prof. Dr. Dr. h. c. Max Mustermann sprach.",
+    ):
+        assert len(_texts(text)) == 1, text

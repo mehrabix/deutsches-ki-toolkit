@@ -11,7 +11,12 @@ from deutsches_ki.text.abbreviations import ABBREVIATIONS, SENTENCE_END_ABBREVIA
 
 __all__ = ["split_sentences", "tokenize_words"]
 
-_BOUNDARY = re.compile(r"([.!?…]+)(?=\s|$)")
+# Schließende Zeichen, die auf ein Satzzeichen folgen können. Ein Satzende im
+# Anführungszeichen — „Er sagte „Hallo.“ Danach ging er.“ — wird ohne sie nicht
+# erkannt, weil zwischen Punkt und Leerzeichen noch das Anführungszeichen steht.
+_CLOSING_CHARS = "\"'\u201c\u201d\u00ab\u00bb)]}"
+
+_BOUNDARY = re.compile(rf"([.!?…]+[{re.escape(_CLOSING_CHARS)}]*)(?=\s|$)")
 _PARAGRAPH_BREAK = re.compile(r"\n[ \t]*\n")
 _WORD = re.compile(r"[\wÄÖÜäöüß]+(?:[-\u2013][\wÄÖÜäöüß]+)*", flags=re.UNICODE)
 _FIRST_WORD = re.compile(r"\w+", flags=re.UNICODE)
@@ -30,7 +35,42 @@ _SPACED_DATE = re.compile(r"^\d{1,2}\s*\.\s*\d{1,2}")
 # Abkürzung“ würde echte Satzenden verschlucken: „Amerika. 5 Jahre“ und
 # „Der Stoff. 5 Meter“ enden auf „ca.“ und „ff.“, sind aber keine Komposita.
 _COMPOUND_SUFFIXES = ("bde", "bd", "nrn", "nr", "pl", "str")
+
+# Monats- und Wochentagskürzel: „im Jan. 2024“, „am Mo. 5. Mai“. Sie stehen als
+# eigenes Wort und nicht als Kompositum. „so.“ gehört bewusst dazu: als
+# Wochentag führt es eine Zahl ein, als Wort („Das ist so.“) endet es weiterhin
+# einen Satz, weil dann keine Zahl folgt.
+_DATE_ABBREVIATIONS = frozenset(
+    {
+        "jan",
+        "feb",
+        "mär",
+        "apr",
+        "jun",
+        "jul",
+        "aug",
+        "sep",
+        "sept",
+        "okt",
+        "nov",
+        "dez",
+        "mo",
+        "di",
+        "mi",
+        "do",
+        "fr",
+        "sa",
+        "so",
+    }
+)
+
 _WORD_END = re.compile(r"(\w+)$", flags=re.UNICODE)
+
+# Aufzählungszeichen vor einem Punkt: „I.“, „II.“, „a.“, „b.“. Sie gehören zum
+# folgenden Eintrag und nicht zum vorherigen Satz. Römische Zahlen stehen in
+# deutschen Gliederungen häufig, Buchstaben in Unterpunkten.
+_ROMAN_NUMERAL = re.compile(r"[IVXLCDM]+$")
+_ENUMERATION_START = re.compile(r"(?:[IVXLCDM]+|[A-Za-zÄÖÜäöüß])\.\s")
 
 _MONTHS = frozenset(
     {
@@ -368,24 +408,57 @@ def _is_standalone_ordinal(text: str, start: int) -> bool:
     return ziffern <= 3
 
 
-def _is_number_after_compound_abbreviation(text: str, start: int, rest: str) -> bool:
-    """Steht vor dem Punkt eine eingeklebte Abkürzung und danach eine Nummer?
+def _is_number_after_abbreviation(text: str, start: int, rest: str) -> bool:
+    """Führt eine Abkürzung am Wortende eine Nummer ein?
 
-    „Rechnungsnr. 5“ und „Werkstattstr. 5“ sind Angaben, der Punkt trennt keinen
-    Satz. Ohne Nummer bleibt der Punkt ein mögliches Satzende: „Er wohnt in der
-    Hauptstr. Danach zog er um.“
+    „Rechnungsnr. 5“, „Werkstattstr. 5“, „im Jan. 2024“ und „am Mo. 5. Mai“ sind
+    Angaben, der Punkt trennt keinen Satz. Ohne Nummer bleibt er ein mögliches
+    Satzende: „Er wohnt in der Hauptstr. Danach zog er um.“
     """
     if not rest[:1].isdigit():
         return False
     match = _WORD_END.search(text[:start])
-    return match is not None and match.group(1).lower().endswith(_COMPOUND_SUFFIXES)
+    if match is None:
+        return False
+    word = match.group(1).lower()
+    return word.endswith(_COMPOUND_SUFFIXES) or word in _DATE_ABBREVIATIONS
+
+
+def _is_standalone_enumeration(text: str, start: int) -> bool:
+    """Steht vor dem Punkt ein Gliederungszeichen wie „I.“ oder „a.“?
+
+    Ein einzelner Buchstabe oder eine römische Zahl am Wortanfang ist ein
+    Aufzählungszeichen und kein Satzende: „I. Der erste Punkt.“
+    """
+    position = start - 1
+    while position >= 0 and text[position].isalpha():
+        position -= 1
+    token = text[position + 1 : start]
+    if not token:
+        return False
+    if position >= 0 and text[position] not in " \t\n\r":
+        return False
+    if _ROMAN_NUMERAL.fullmatch(token):
+        return True
+    return len(token) == 1 and token.isalpha()
+
+
+def _starts_enumeration(rest: str) -> bool:
+    """Beginnt hier ein Aufzählungspunkt, auch ein kleingeschriebener?
+
+    Ein Satzanfang ist normalerweise großgeschrieben. „… Der erste Punkt.
+    b. Der zweite Punkt.“ beginnt dagegen mit einem kleinen Buchstaben, weil
+    das Gliederungszeichen klein ist.
+    """
+    return _ENUMERATION_START.match(rest) is not None
 
 
 def _is_boundary(text: str, start: int, end: int, spans: list[tuple[int, int, str]]) -> bool:
     punct = text[start:end]
+    terminal = punct.rstrip(_CLOSING_CHARS)
     rest = text[end:].lstrip()
 
-    if punct[-1] in "!?…":
+    if terminal[-1] in "!?…":
         return True
 
     abbreviation = _abbreviation_at(start, spans)
@@ -398,7 +471,10 @@ def _is_boundary(text: str, start: int, end: int, spans: list[tuple[int, int, st
             return False
         return _starts_sentence(rest)
 
-    if _is_number_after_compound_abbreviation(text, start, rest):
+    if _is_number_after_abbreviation(text, start, rest):
+        return False
+
+    if _is_standalone_enumeration(text, start):
         return False
 
     if start > 0 and text[start - 1].isdigit():
@@ -422,7 +498,12 @@ def _is_boundary(text: str, start: int, end: int, spans: list[tuple[int, int, st
     # Auch eine Ziffer kann einen Satz beginnen: Aufzählungen wie „… Punkt.
     # 2. Der zweite Punkt.“ Der Punkt zwischen zwei Ziffern ohne Leerzeichen
     # erreicht diese Stelle gar nicht, weil _BOUNDARY ein Leerzeichen verlangt.
-    return rest[0].isupper() or rest[0].isdigit() or rest[0] in _OPENING_CHARS
+    return (
+        rest[0].isupper()
+        or rest[0].isdigit()
+        or rest[0] in _OPENING_CHARS
+        or _starts_enumeration(rest)
+    )
 
 
 def _split_with_nlp(text: str, nlp: Any) -> list[Sentence]:
