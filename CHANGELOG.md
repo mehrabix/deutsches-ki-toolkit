@@ -4,6 +4,36 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.2]
+
+Behebt zwei weitere Fehler der Satzsegmentierung: Anschriften mit abgekürzter
+Straße und Nummern mit eingeklebter Abkürzung.
+
+### Behoben
+
+- **Anschriften zerfielen am Straßenpunkt.** „Werkstattstr. 5, 10115 Berlin.“
+  wurde zu „Werkstattstr.“ und „5, 10115 Berlin.“ Die Abkürzung „Str.“ steht
+  am Ende eines Kompositums. Die Abkürzungserkennung verlangt davor ein
+  Wortzeichen und findet sie dort nicht; auf den Punkt folgt die Hausnummer,
+  und eine Ziffer darf einen Satz beginnen. Ein Punkt nach einer eingeklebten
+  Abkürzung trennt jetzt keinen Satz mehr, wenn eine Nummer folgt.
+- **Rechnungs- und Bestellnummern zerfielen.** Dieselbe Ursache traf
+  „Rechnungsnr. 5“, „Auftragsnr. 2024-001“, „Bestellnr. 8“, „Kundennr. 4711“
+  und „Sammelbd. 3“.
+
+### Geändert
+
+- Die Demo kürzt lange Sätze an einem Wortende. Der harte Schnitt nach 80
+  Zeichen ließ „Werkstattstr.“ als „Werkstatts“ enden und sah dadurch aus wie
+  ein Segmentierungsfehler.
+
+### Bekannte Grenze
+
+- Die Liste der Kompositum-Endungen ist bewusst kurz: `str`, `pl`, `nr`, `nrn`,
+  `bd`, `bde`. Ein allgemeiner Test auf „Wort endet auf eine Abkürzung“ würde
+  echte Satzenden verschlucken: „In Amerika. 5 Jahre später.“ und „Der Stoff.
+  5 Meter reichen.“ enden auf „ca.“ und „ff.“, sind aber keine Komposita.
+
 ## [0.5.1]
 
 Behebt die Satzsegmentierung. Die Prüfung gegen eine breitere Sammlung
