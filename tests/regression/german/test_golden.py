@@ -29,6 +29,7 @@ import pytest
 from deutsches_ki.chunking import chunk_document
 from deutsches_ki.classification import classify_document
 from deutsches_ki.documents import parse
+from deutsches_ki.documents.absaetze import split_absaetze
 from deutsches_ki.embeddings import get_embedder
 from deutsches_ki.pii import anonymize, detect
 from deutsches_ki.retrieval import InMemoryRetriever
@@ -79,11 +80,17 @@ def _missing_tokens(text: str) -> list[str]:
     return sorted(term for term in text.split() if term not in present)
 
 
+def _absatz_markers(text: str) -> list[str]:
+    """Die Marken der Absätze, ohne Marke als leerer Eintrag."""
+    return [absatz.marker or "" for absatz in split_absaetze(text)]
+
+
 CHECKS: dict[str, Callable[[str], Any]] = {
     "compound_parts": _compound_parts,
     "pii_types": _pii_types,
     "pii_texts": _pii_texts,
     "sentence_count": lambda text: len(split_sentences(text)),
+    "absatz_markers": _absatz_markers,
     "normalize_search": lambda text: normalize_german(text, mode="search"),
     "normalize_display": lambda text: normalize_german(text, mode="display"),
     "classify_type": lambda text: classify_document(text).document_type.value,

@@ -15,6 +15,7 @@ from deutsches_ki.core.enums import (
 from deutsches_ki.core.ids import new_id
 
 __all__ = [
+    "Absatz",
     "Answer",
     "Chunk",
     "Citation",
@@ -59,6 +60,22 @@ class Entity(_Model):
     def length(self) -> int:
         """Länge des Treffers in Zeichen."""
         return self.end - self.start
+
+
+class Absatz(_Model):
+    """Ein Absatz innerhalb eines Abschnitts, etwa „(1)“ oder „(2)“.
+
+    Deutsche Verträge und Gesetze gliedern einen Paragraphen in Absätze. Die
+    Marke ist keine Satzgrenze, sondern eine eigene Ebene zwischen Abschnitt und
+    Satz. Erst damit lässt sich „§ 4 Abs. 2“ als Einheit adressieren.
+
+    ``text`` ist der Absatz wie im Dokument, die Marke eingeschlossen.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    marker: str | None = None
+    text: str = ""
 
 
 class Section(_Model):
@@ -130,6 +147,21 @@ class Document(_Model):
 
         walk(self.sections)
         return result
+
+    def iter_absaetze(self) -> list[tuple[Section, Absatz]]:
+        """Alle Absätze mit ihrem Abschnitt, in Dokumentreihenfolge.
+
+        Die Ableitung geschieht aus dem Inhalt des Abschnitts. So kann sie nicht
+        von ihm abweichen, auch nicht nach einer Anonymisierung, die den Text
+        ersetzt.
+        """
+        from deutsches_ki.documents.absaetze import split_absaetze
+
+        return [
+            (section, absatz)
+            for section in self.iter_sections()
+            for absatz in split_absaetze(section.content)
+        ]
 
 
 class Chunk(_Model):

@@ -12,7 +12,7 @@ pii.detect              deutsche Kennungen mit Prüfsumme
   ↓
 pii.anonymize           sensible Stellen entfernen
   ↓
-chunking.chunk_document an Abschnitts-, Absatz- und Satzgrenzen
+chunking.chunk_document Abschnitt, Absatz („(1)“), Satz, sonst Token
   ↓
 embeddings.get_embedder Vektor je Chunk
   ↓

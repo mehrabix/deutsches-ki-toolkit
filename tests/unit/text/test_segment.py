@@ -463,3 +463,15 @@ def test_url_at_sentence_end_is_split() -> None:
         "Siehe https://example.de/pfad.",
         "Danach folgt mehr.",
     ]
+
+
+def test_frequent_business_abbreviations_are_not_split() -> None:
+    """Abkürzungen, die in Geschäftstexten ständig vorkommen."""
+    for text in (
+        "Der Preis inkl. Lieferung beträgt 100 EUR.",
+        "Die Lieferung erfolgt ggf. später.",
+        "Der Betrag zzgl. Versand beträgt 110 EUR.",
+        "Das gilt evtl. auch für Kunden.",
+        "Der Antrag wird gem. § 4 geprüft.",
+    ):
+        assert len(_texts(text)) == 1, text

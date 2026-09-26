@@ -98,6 +98,13 @@
     { "input": "Die Firma sitzt in der Bahnhofstr. 7a, 80331 München.", "check": "sentence_count", "expected": 1 },
     { "input": "Der Wert ist 3,14159. Danach folgt mehr.", "check": "sentence_count", "expected": 2 },
     { "input": "Die Summe beträgt 12.345.678,90 EUR.", "check": "sentence_count", "expected": 1 },
-    { "input": "Sie sagte: „Das kostet 1.000,00 EUR.“ Danach ging sie.", "check": "sentence_count", "expected": 2 }
+    { "input": "Sie sagte: „Das kostet 1.000,00 EUR.“ Danach ging sie.", "check": "sentence_count", "expected": 2 },
+
+    { "input": "Der Preis inkl. Lieferung beträgt 100 EUR.", "check": "sentence_count", "expected": 1 },
+    { "input": "Die Lieferung erfolgt ggf. später.", "check": "sentence_count", "expected": 1 },
+    { "input": "Der Betrag zzgl. Versand beträgt 110 EUR.", "check": "sentence_count", "expected": 1 },
+    { "input": "Das gilt evtl. auch für Kunden.", "check": "sentence_count", "expected": 1 },
+    { "input": "Der Antrag wird gem. § 4 geprüft.", "check": "sentence_count", "expected": 1 },
+    { "input": "Die Sendung wiegt ca. 5 kg.", "check": "sentence_count", "expected": 1 }
   ]
 }

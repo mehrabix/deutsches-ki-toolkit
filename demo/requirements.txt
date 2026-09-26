@@ -1,4 +1,4 @@
 gradio>=5.0
 torch
 transformers>=4.44
-deutsches-ki-toolkit>=0.5.4
+deutsches-ki-toolkit>=0.5.5

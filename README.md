@@ -511,14 +511,18 @@ Rangfolge:
 ```text
 Dokumentstruktur
       ↓
-Abschnittsgrenzen
+Abschnittsgrenzen        § 4 Zahlungsbedingungen
       ↓
-Absatzgrenzen
+Absatzgrenzen            (1), (2)
       ↓
 Satzgrenzen
       ↓
 Token-Grenze (nur als letztes Mittel)
 ```
+
+Ein Absatz ist eine eigene Ebene, nicht bloß Text. Die Marke bleibt im Chunk
+stehen, und der Chunk trägt sie in den Metadaten — damit lässt sich
+`§ 4 Abs. 2` als Einheit adressieren.
 
 Schlecht:
 
@@ -548,7 +552,7 @@ Jeder Chunk trägt seinen Weg im Dokument mit:
   "document_id": "vertrag-2024-001",
   "section": "Zahlungsbedingungen",
   "section_path": ["Vertrag", "Zahlungsbedingungen"],
-  "paragraph": "§ 3",
+  "absatz": "(2)",
   "page": 12,
   "language": "de",
   "document_type": "contract"

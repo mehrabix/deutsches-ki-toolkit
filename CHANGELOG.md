@@ -4,11 +4,35 @@ Alle nennenswerten Änderungen an diesem Projekt werden hier festgehalten.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/),
 die Versionierung an [Semantic Versioning](https://semver.org/lang/de/).
 
+## [0.5.5]
+
+Führt die Absatzebene ein und dokumentiert die Segmentierung.
+
+### Hinzugefügt
+
+- **Absätze als eigene Ebene.** Ein Paragraph gliedert sich in Absätze: „(1)“,
+  „(2)“. Bisher waren sie Text innerhalb des Abschnitts. Neu ist das Modell
+  `Absatz` mit `marker` und `text`, `split_absaetze()` und
+  `Document.iter_absaetze()`. Jeder Chunk trägt seinen Absatz als `absatz` in
+  den Metadaten, sodass sich „§ 4 Abs. 2“ als Einheit adressieren lässt. Die
+  Marke bleibt im Text erhalten; sie ist Gliederung, nicht Beiwerk.
+- **`docs/concepts/segmentation.md`** beschreibt die Entscheidungsreihenfolge
+  der Satzgrenzen, die drei Fehlerrichtungen, die bekannten Grenzen und wie ein
+  neuer Fall in die Prüfsammlung kommt.
+- Die Prüfsammlung `german_absaetze.json` mit 7 Fällen für die Absatzebene. Die
+  Segmentierungssammlung wächst auf 91 Fälle.
+
+### Behoben
+
+- **Zahlen im Änderungsprotokoll waren falsch.** Die Einträge zu 0.5.3 und 0.5.4
+  nannten 66 und 92 Fälle; tatsächlich waren es 65 und 85. Die Zahlen stammen
+  jetzt aus einer Zählung über die Commits.
+
 ## [0.5.4]
 
 Nimmt die Kategorien einer weiteren Prüfrunde auf: Adressen im Web, Gesetzbücher
 am Satzende und Abkürzungsgemische. Die Sammlung
-`tests/regression/german/german_segmentation.json` wächst auf 92 Fälle.
+`tests/regression/german/german_segmentation.json` wächst auf 85 Fälle.
 
 ### Behoben
 
@@ -34,7 +58,7 @@ am Satzende und Abkürzungsgemische. Die Sammlung
 
 Erweitert die Satzsegmentierung um Fälle aus einer breiten Prüfung mit deutschen
 Texten. Die Sammlung liegt als `tests/regression/german/german_segmentation.json`
-mit 66 Fällen bei und läuft in der CI mit.
+mit 65 Fällen bei und läuft in der CI mit.
 
 ### Behoben
 

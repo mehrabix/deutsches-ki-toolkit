@@ -1,0 +1,41 @@
+{
+  "name": "german_absaetze",
+  "description": "Die Absatzebene zwischen Abschnitt und Satz: „(1)“, „(2)“. Die Marke ist keine Satzgrenze, sondern eine eigene Ebene. Text vor der ersten Marke bleibt ein Absatz ohne Marke.",
+  "cases": [
+    {
+      "input": "(1) Erster Absatz.\n(2) Zweiter Absatz.",
+      "check": "absatz_markers",
+      "expected": ["(1)", "(2)"]
+    },
+    {
+      "input": "(1) Erster Absatz.\n\n(2) Zweiter Absatz.",
+      "check": "absatz_markers",
+      "expected": ["(1)", "(2)"]
+    },
+    {
+      "input": "Einleitung ohne Marke.\n(1) Der erste Absatz.\n(2) Der zweite Absatz.",
+      "check": "absatz_markers",
+      "expected": ["", "(1)", "(2)"]
+    },
+    {
+      "input": "Der Auftraggeber beauftragt die Beispiel GmbH.",
+      "check": "absatz_markers",
+      "expected": [""]
+    },
+    {
+      "input": "(2a) Zwischenform mit Buchstabe.",
+      "check": "absatz_markers",
+      "expected": ["(2a)"]
+    },
+    {
+      "input": "Der Verweis auf (1) steht mitten im Satz.",
+      "check": "absatz_markers",
+      "expected": [""]
+    },
+    {
+      "input": "(1) Die Zahlung ist fällig.\n(2) Verzugszinsen fallen an.\n(3) Gerichtsstand ist Berlin.",
+      "check": "absatz_markers",
+      "expected": ["(1)", "(2)", "(3)"]
+    }
+  ]
+}

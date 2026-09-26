@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from deutsches_ki.documents.absaetze import split_absaetze
 from deutsches_ki.documents.headings import build_sections, match_heading
 from deutsches_ki.documents.language import detect_language
 from deutsches_ki.documents.markdown import parse_markdown, split_paragraphs
@@ -17,5 +18,6 @@ __all__ = [
     "parse",
     "parse_markdown",
     "parse_plaintext",
+    "split_absaetze",
     "split_paragraphs",
 ]

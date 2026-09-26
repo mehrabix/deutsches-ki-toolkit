@@ -13,6 +13,7 @@ from pathlib import PurePosixPath
 from deutsches_ki.chunking.tokenize import estimate_tokens, split_tokens
 from deutsches_ki.core.enums import ChunkStrategy
 from deutsches_ki.core.models import Chunk, Document, Section
+from deutsches_ki.documents.absaetze import split_absaetze
 from deutsches_ki.documents.plaintext import split_paragraphs
 from deutsches_ki.text.segment import split_sentences
 
@@ -26,6 +27,7 @@ class _Unit:
     section_id: str | None = None
     section_title: str | None = None
     section_path: list[str] = field(default_factory=list)
+    absatz: str | None = None
 
 
 def _iter_sections(
@@ -114,6 +116,7 @@ def _make_chunk(
         metadata={
             "section": first.section_title,
             "section_path": first.section_path,
+            "absatz": first.absatz,
             "page": first.page,
             "language": document.language.value,
             "document_type": document_type,
@@ -135,17 +138,19 @@ def _chunk_structural(
         if not section.content.strip():
             continue
         units: list[_Unit] = []
-        for paragraph in split_paragraphs(section.content):
-            for piece in _expand(paragraph, max_tokens):
-                units.append(
-                    _Unit(
-                        text=piece,
-                        page=section.page,
-                        section_id=section.id,
-                        section_title=section.title,
-                        section_path=path,
+        for absatz in split_absaetze(section.content):
+            for paragraph in split_paragraphs(absatz.text):
+                for piece in _expand(paragraph, max_tokens):
+                    units.append(
+                        _Unit(
+                            text=piece,
+                            page=section.page,
+                            section_id=section.id,
+                            section_title=section.title,
+                            section_path=path,
+                            absatz=absatz.marker,
+                        )
                     )
-                )
         chunks.extend(
             _make_chunk(document, group, document_type, document_name)
             for group in _pack(units, max_tokens, overlap)
