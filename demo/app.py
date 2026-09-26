@@ -133,25 +133,43 @@ def _markdown_table(headers: list[str], rows: list[list[str]]) -> str:
 # --------------------------------------------------------------------------
 
 
+def _nach_abschnitten(document: GermanDocument) -> tuple[str, int, int]:
+    """Ordnet die Sätze ihrer erkannten Überschrift zu.
+
+    Eine Überschrift ist eine Überschrift und kein Satzanfang. Sie steht
+    deshalb als eigene Zeile über ihren Sätzen, statt in der ersten Satzzeile
+    aufzugehen.
+    """
+    bloecke: list[str] = []
+    abschnitte = 0
+    gesamt = 0
+    for abschnitt in document.document.iter_sections():
+        saetze = split_sentences(abschnitt.content)
+        if not saetze and not abschnitt.title:
+            continue
+        titel = abschnitt.title or "Ohne Überschrift"
+        zeilen = [f"**{html.escape(titel)}**", ""]
+        zeilen.extend(f"- {html.escape(_kuerzen(satz.text, 90))}" for satz in saetze)
+        bloecke.append("\n".join(zeilen))
+        abschnitte += 1
+        gesamt += len(saetze)
+    return "\n\n".join(bloecke), abschnitte, gesamt
+
+
 def schritt_struktur(text: str) -> tuple[str, str, str]:
     """Vergleicht naives Trennen mit der deutschen Segmentierung."""
     text = text or ""
     naive = [part.strip() for part in text.split(".") if part.strip()]
     document = _document(text)
-    saetze = split_sentences(text)
-    abschnitte = list(document.document.iter_sections())
 
     naiv_text = "\n".join(f"- {html.escape(_kuerzen(part, 80))}" for part in naive[:14])
-    gut_text = "\n".join(f"- {html.escape(_kuerzen(satz.text, 80))}" for satz in saetze[:14])
+
+    gliederung, abschnitte, saetze = _nach_abschnitten(document)
+    if not gliederung:
+        gliederung = "_Keine Überschrift erkannt._"
 
     kopf = f"**{len(naive)} Bruchstücke**\n\n"
-    rechts = f"**{len(saetze)} Sätze**\n\n{gut_text}"
-
-    if abschnitte:
-        zeilen = [[str(a.level), a.title or "—", "ja" if a.children else "—"] for a in abschnitte]
-        gliederung = _markdown_table(["Ebene", "Überschrift", "Unterabschnitte"], zeilen)
-    else:
-        gliederung = "_Keine Überschriften erkannt._"
+    rechts = f"**{saetze} Sätze in {abschnitte} Abschnitten**\n\n{gliederung}"
 
     naiv_chunks = _naive_chunks(text)
     gute_chunks = chunk_text(text, strategy="structural")
@@ -169,9 +187,7 @@ def schritt_struktur(text: str) -> tuple[str, str, str]:
     )
 
     rest = (
-        "**Erkannte Gliederung**\n\n"
-        + gliederung
-        + f"\n\n**Naiv nach Zeichen geschnitten — {len(naiv_chunks)} Stücke**\n\n"
+        f"**Naiv nach Zeichen geschnitten — {len(naiv_chunks)} Stücke**\n\n"
         + naiv_tabelle
         + f"\n\n**Strukturell an Abschnitten — {len(gute_chunks)} Stücke**\n\n"
         + gut_tabelle
@@ -474,7 +490,7 @@ def _datei_lesen(datei: str | None) -> tuple[str, str, str, str]:
 threading.Thread(target=_vorladen, daemon=True).start()
 
 
-with gr.Blocks(title="Deutsches KI-Toolkit") as demo:
+with gr.Blocks(title="Deutsches KI-Toolkit", analytics_enabled=False) as demo:
     gr.Markdown(
         """
         # Deutsches KI-Toolkit
@@ -483,7 +499,10 @@ with gr.Blocks(title="Deutsches KI-Toolkit") as demo:
         personenbezogene Daten geprüft als englische. Jeder Schritt unten stellt
         die deutsche Behandlung einer naiven gegenüber.
 
-        Alles läuft auf diesem Server, es wird nichts gespeichert.
+        Alles läuft auf diesem Server. Eingaben werden nicht an Dritte gesendet
+        und nicht dauerhaft gespeichert; hochgeladene Dateien liegen nur
+        vorübergehend im Container. Gradios anonyme Nutzungsstatistik ist
+        abgeschaltet.
         """
     )
 
@@ -496,6 +515,9 @@ with gr.Blocks(title="Deutsches KI-Toolkit") as demo:
         )
         struktur_eingabe = gr.Textbox(label="Text", lines=12, value=BEISPIEL_VERTRAG)
         struktur_button = gr.Button("Zerlegen", variant="primary")
+        with gr.Row():
+            gr.Markdown("**Naiv — stumpf am Punkt geschnitten**")
+            gr.Markdown("**Deutsch — Abschnitte, darunter ihre Sätze**")
         with gr.Row():
             struktur_naiv = gr.Markdown()
             struktur_gut = gr.Markdown()
